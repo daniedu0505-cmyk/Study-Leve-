@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Estudo Leve — Plataforma Educacional & Tutor IA</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Generative AI SDK oficial para integração direta no navegador -->
+  <script type="importmap">
+    {
+      "imports": {
+        "@google/genai": "https://esm.run/@google/genai"
+      }
+    }
+  </script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              200: '#bfdbfe',
+              300: '#93c5fd',
+              400: '#60a5fa',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #f4f8ff; color: #0f172a; }
+    .glass-card { background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(12px); border: 1px solid #dbeafe; }
+    .tab-active { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #ffffff; box-shadow: 0 8px 20px -4px rgba(37, 99, 235, 0.35); }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #93c5fd; border-radius: 9999px; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Barra Superior -->
+  <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-brand-100 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white shadow-md shadow-brand-500/30">
+          <i data-lucide="book-open-check" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-extrabold tracking-tight text-brand-900 leading-none">Estudo Leve</h1>
+          <span class="text-xs font-medium text-brand-600 flex items-center gap-1 mt-0.5">
+            <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span id="cloudStatusText">Sincronizado na Nuvem</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Navegação Principal -->
+      <nav class="hidden md:flex items-center gap-1.5 bg-brand-50 p-1.5 rounded-2xl border border-brand-100">
+        <button onclick="switchTab('dashboard')" data-tab="dashboard" class="nav-btn tab-active px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Painel & Provas
+        </button>
+        <button onclick="switchTab('trilha')" data-tab="trilha" class="nav-btn text-slate-600 hover:text-brand-700 px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2">
+          <i data-lucide="map" class="w-4 h-4"></i> Trilha de Estudos
+        </button>
+        <button onclick="switchTab('biblioteca')" data-tab="biblioteca" class="nav-btn text-slate-600 hover:text-brand-700 px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2">
+          <i data-lucide="library" class="w-4 h-4"></i> Biblioteca
+        </button>
+        <button onclick="switchTab('tutor')" data-tab="tutor" class="nav-btn text-slate-600 hover:text-brand-700 px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2">
+          <i data-lucide="sparkles" class="w-4 h-4 text-brand-500"></i> Tutor Leve IA
+        </button>
+        <button onclick="switchTab('admin')" data-tab="admin" class="nav-btn text-slate-600 hover:text-brand-700 px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2">
+          <i data-lucide="shield-check" class="w-4 h-4"></i> Proprietário
+        </button>
+      </nav>
+
+      <!-- Perfil do Estudante -->
+      <div class="flex items-center gap-2">
+        <button onclick="openProfileModal()" class="flex items-center gap-2.5 bg-brand-50 hover:bg-brand-100 border border-brand-200 px-3 py-1.5 rounded-full transition">
+          <span id="studentAvatar" class="text-lg">🎓</span>
+          <div class="text-left hidden sm:block">
+            <p id="studentNameDisplay" class="text-xs font-bold text-brand-900 leading-tight">Estudante</p>
+            <p id="studentIdBadge" class="text-[10px] text-brand-600 font-mono">ID: #local</p>
+          </div>
+          <i data-lucide="settings-2" class="w-4 h-4 text-brand-600"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Navegação Mobile -->
+    <div class="flex md:hidden overflow-x-auto gap-1.5 px-4 py-2 bg-brand-50/70 border-t border-brand-100">
+      <button onclick="switchTab('dashboard')" data-tab="dashboard" class="nav-btn tab-active px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">Painel & Provas</button>
+      <button onclick="switchTab('trilha')" data-tab="trilha" class="nav-btn text-slate-600 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">Trilha</button>
+      <button onclick="switchTab('biblioteca')" data-tab="biblioteca" class="nav-btn text-slate-600 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">Biblioteca</button>
+      <button onclick="switchTab('tutor')" data-tab="tutor" class="nav-btn text-slate-600 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">Tutor IA</button>
+      <button onclick="switchTab('admin')" data-tab="admin" class="nav-btn text-slate-600 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">Proprietário</button>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- ABA 1: PAINEL & HORÁRIOS DE PROVAS -->
+    <section id="tab-dashboard" class="tab-section space-y-6">
+      <div class="rounded-3xl bg-gradient-to-r from-brand-700 via-brand-600 to-sky-500 p-6 sm:p-8 text-white shadow-xl shadow-brand-600/20 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+        <div class="space-y-2 max-w-xl">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-xs font-semibold backdrop-blur-sm">
+            <i data-lucide="cloud-check" class="w-3.5 h-3.5"></i> Progresso salvo automaticamente por estudante
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Olá, <span id="welcomeName">Estudante</span>! Pronto para estudar leve hoje?</h2>
+          <p class="text-brand-100 text-sm">Acompanhe o calendário de avaliações, revise resumos da trilha e tire dúvidas em segundos com o Tutor IA.</p>
+        </div>
+        <div class="w-full lg:w-72 bg-white/15 backdrop-blur-md rounded-2xl p-4 border border-white/20 space-y-3">
+          <div class="flex justify-between text-xs font-bold">
+            <span>Progresso Geral da Trilha</span>
+            <span id="overallProgressText">0%</span>
+          </div>
+          <div class="w-full h-2.5 bg-brand-950/30 rounded-full overflow-hidden">
+            <div id="overallProgressBar" class="h-full bg-white rounded-full transition-all duration-500" style="width: 0%"></div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 pt-1 text-center">
+            <div class="bg-white/10 rounded-xl p-2">
+              <p id="statCompletedModules" class="text-lg font-extrabold">0/0</p>
+              <p class="text-[11px] text-brand-100">Módulos Concluídos</p>
+            </div>
+            <div class="bg-white/10 rounded-xl p-2">
+              <p id="statAvgQuiz" class="text-lg font-extrabold">—</p>
+              <p class="text-[11px] text-brand-100">Média nos Quizzes</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-bold text-brand-950 flex items-center gap-2">
+              <i data-lucide="calendar-clock" class="w-5 h-5 text-brand-600"></i> Horários de Provas e Avaliações
+            </h3>
+            <span class="text-xs font-semibold text-brand-600 bg-brand-100 px-2.5 py-1 rounded-full">Contagem Regressiva</span>
+          </div>
+          <div id="examsList" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+        </div>
+
+        <div class="space-y-6">
+          <div class="glass-card rounded-2xl p-5 shadow-sm space-y-4">
+            <h3 class="text-base font-bold text-brand-950 flex items-center gap-2">
+              <i data-lucide="megaphone" class="w-5 h-5 text-brand-600"></i> Mural de Avisos da Turma
+            </h3>
+            <div id="noticesList" class="space-y-3 max-h-64 overflow-y-auto pr-1"></div>
+          </div>
+
+          <div class="glass-card rounded-2xl p-5 shadow-sm space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-base font-bold text-brand-950 flex items-center gap-2">
+                <i data-lucide="notebook-pen" class="w-5 h-5 text-brand-600"></i> Meu Bloco Rápido
+              </h3>
+              <span id="notesSavedIndicator" class="text-[11px] font-semibold text-emerald-600">Salvo na nuvem ✓</span>
+            </div>
+            <textarea id="personalNotes" rows="4" placeholder="Anote lembretes, fórmulas ou tópicos para revisar..." class="w-full rounded-xl border border-brand-200 bg-brand-50/50 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA 2: TRILHA INTERATIVA DE ESTUDOS -->
+    <section id="tab-trilha" class="tab-section hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-extrabold text-brand-950">Trilha Interativa de Estudos</h2>
+          <p class="text-sm text-slate-600">Escolha uma etapa para estudar o resumo, assistir à aula e resolver o quiz.</p>
+        </div>
+        <select id="trilhaSubjectFilter" onchange="renderTrail()" class="rounded-xl border border-brand-200 bg-white px-4 py-2 text-sm font-semibold text-brand-900 focus:outline-none focus:ring-2 focus:ring-brand-500">
+          <option value="all">Todas as Disciplinas</option>
+        </select>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div id="trailStepsList" class="lg:col-span-4 space-y-3"></div>
+
+        <div id="trailWorkspace" class="lg:col-span-8 glass-card rounded-3xl p-6 shadow-sm space-y-6">
+          <div class="flex flex-wrap items-start justify-between gap-4 border-b border-brand-100 pb-4">
+            <div>
+              <span id="activeModuleSubject" class="text-xs font-bold uppercase tracking-wider text-brand-600 bg-brand-100 px-2.5 py-1 rounded-full">Disciplina</span>
+              <h3 id="activeModuleTitle" class="text-xl font-extrabold text-brand-950 mt-2">Selecione um módulo</h3>
+            </div>
+            <button id="toggleCompleteBtn" onclick="toggleModuleCompletion()" class="px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 bg-brand-100 text-brand-700 hover:bg-brand-200">
+              <i data-lucide="check-circle-2" class="w-4 h-4"></i> <span>Marcar como Concluído</span>
+            </button>
+          </div>
+
+          <div class="flex gap-2 border-b border-brand-100 pb-3">
+            <button onclick="switchModuleSubTab('resumo')" id="subtab-resumo" class="px-4 py-2 rounded-xl text-sm font-bold bg-brand-600 text-white">📄 Resumo Estruturado</button>
+            <button onclick="switchModuleSubTab('video')" id="subtab-video" class="px-4 py-2 rounded-xl text-sm font-bold bg-brand-50 text-brand-700 hover:bg-brand-100">🎬 Videoaula</button>
+            <button onclick="switchModuleSubTab('quiz')" id="subtab-quiz" class="px-4 py-2 rounded-xl text-sm font-bold bg-brand-50 text-brand-700 hover:bg-brand-100">🧠 Banco de Questões</button>
+          </div>
+
+          <div id="moduleContent-resumo" class="space-y-4">
+            <div id="activeModuleSummary" class="prose max-w-none text-slate-700 text-sm leading-relaxed bg-brand-50/60 p-5 rounded-2xl border border-brand-100 whitespace-pre-line"></div>
+            <div class="flex justify-end">
+              <button onclick="askAIForCurrentModule()" class="inline-flex items-center gap-2 text-xs font-bold text-brand-700 bg-brand-100 hover:bg-brand-200 px-4 py-2 rounded-xl transition">
+                <i data-lucide="sparkles" class="w-4 h-4"></i> Pedir ao Tutor IA para explicar ou criar flashcards deste tema
+              </button>
+            </div>
+          </div>
+
+          <div id="moduleContent-video" class="hidden space-y-4">
+            <div class="aspect-video w-full rounded-2xl overflow-hidden bg-slate-900 border border-brand-200 shadow-inner">
+              <iframe id="activeModuleVideo" class="w-full h-full" src="" title="Videoaula" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+            <p class="text-xs text-slate-500">Dica: Assista à aula e anote os pontos principais no seu bloco de notas.</p>
+          </div>
+
+          <div id="moduleContent-quiz" class="hidden space-y-5">
+            <div id="quizContainer" class="space-y-5"></div>
+            <div class="flex items-center justify-between pt-3 border-t border-brand-100">
+              <span id="quizScoreResult" class="text-sm font-extrabold text-brand-700"></span>
+              <button onclick="submitQuiz()" class="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold shadow-md shadow-brand-600/20 transition">
+                Verificar Respostas & Salvar Nota
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA 3: BIBLIOTECA DE MATERIAIS -->
+    <section id="tab-biblioteca" class="tab-section hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-extrabold text-brand-950">Biblioteca de Materiais</h2>
+          <p class="text-sm text-slate-600">Apostilas, mapas mentais, listas de exercícios e slides compartilhados para a turma.</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <input id="librarySearch" oninput="renderLibrary()" type="text" placeholder="Buscar material..." class="rounded-xl border border-brand-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+          <select id="librarySubjectFilter" onchange="renderLibrary()" class="rounded-xl border border-brand-200 bg-white px-4 py-2 text-sm font-semibold text-brand-900">
+            <option value="all">Todas as Disciplinas</option>
+          </select>
+        </div>
+      </div>
+      <div id="libraryGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+    </section>
+
+    <!-- ABA 4: TUTOR LEVE IA -->
+    <section id="tab-tutor" class="tab-section hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div class="glass-card rounded-3xl p-5 space-y-5 h-fit">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-500 to-sky-400 text-white flex items-center justify-center shadow">
+              <i data-lucide="bot" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <h3 class="font-extrabold text-brand-950">Tutor Leve IA</h3>
+              <p class="text-xs text-brand-600">Google Gen AI SDK Conectado</p>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-xs font-bold text-slate-700">Chave Gemini API (Google AI Studio)</label>
+            <input id="geminiApiKeyInput" type="password" onchange="saveApiKey(this.value)" placeholder="Cole sua API Key aqui..." class="w-full rounded-xl border border-brand-200 bg-brand-50/60 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            <p class="text-[11px] text-slate-500">Insira sua chave para ativar o modelo <code>gemini-2.5-flash</code> nativo via SDK oficial.</p>
+          </div>
+
+          <div class="space-y-2">
+            <p class="text-xs font-bold text-slate-700">Atalhos Rápidos</p>
+            <button onclick="sendQuickPrompt('Crie um cronograma de revisão leve para minhas próximas provas cadastradas na plataforma.')" class="w-full text-left text-xs font-semibold bg-brand-50 hover:bg-brand-100 text-brand-800 p-2.5 rounded-xl border border-brand-100 transition">
+              📅 Plano de revisão para minhas provas
+            </button>
+            <button onclick="sendQuickPrompt('Me faça 3 perguntas de quiz rápido sobre os conteúdos da minha trilha de estudos.')" class="w-full text-left text-xs font-semibold bg-brand-50 hover:bg-brand-100 text-brand-800 p-2.5 rounded-xl border border-brand-100 transition">
+              🎯 Simulado relâmpago da trilha
+            </button>
+            <button onclick="sendQuickPrompt('Explique a técnica Pomodoro adaptada para sessões de estudo leve de 30 minutos.')" class="w-full text-left text-xs font-semibold bg-brand-50 hover:bg-brand-100 text-brand-800 p-2.5 rounded-xl border border-brand-100 transition">
+              ⏱️ Dica de foco e organização
+            </button>
