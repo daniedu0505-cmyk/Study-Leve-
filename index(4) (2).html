@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#1457c5">
+<title>Estudo Leve</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--blue:#1457c5;--pale:#edf5ff}*{font-family:Inter,system-ui,sans-serif}body{background:#f4f8ff;color:#132744}
+.card{background:white;border:1px solid #dce9fb;border-radius:20px;box-shadow:0 8px 28px #174b8510}
+.btn{background:var(--blue);color:white;border-radius:12px;padding:10px 15px;font-weight:700}.btn2{background:#e8f1ff;color:#164b9d;border-radius:12px;padding:9px 13px;font-weight:700}
+.field{width:100%;border:1px solid #d4e2f5;border-radius:11px;padding:11px;background:white;color:#152d4e}.nav{padding:10px 13px;border-radius:12px;font-weight:700;white-space:nowrap}.nav.active{background:#1457c5;color:white}.hidden{display:none!important}
+</style>
+</head>
+<body>
+<header class="bg-white border-b border-blue-100 sticky top-0 z-20">
+ <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+  <div class="flex items-center gap-3"><div class="w-11 h-11 rounded-2xl bg-blue-700 text-white grid place-items-center text-2xl">📘</div><div><div class="font-extrabold text-xl text-blue-900">Estudo Leve</div><div id="cloudState" class="text-xs text-blue-600">Salvamento local neste dispositivo</div></div></div>
+  <div class="flex items-center gap-2"><span id="userLabel" class="text-sm font-semibold text-slate-600 hidden sm:block"></span><button id="logoutBtn" class="btn2 hidden">Sair</button></div>
+ </div>
+ <nav id="nav" class="hidden max-w-7xl mx-auto px-3 pb-3 flex gap-2 overflow-x-auto">
+  <button class="nav active" data-tab="inicio">Painel</button><button class="nav" data-tab="trilha">Trilha</button><button class="nav" data-tab="biblioteca">Biblioteca</button><button class="nav" data-tab="tutor">Tutor IA</button><button class="nav hidden" id="adminNav" data-tab="proprietario">Proprietário</button>
+ </nav>
+</header>
+<main class="max-w-7xl mx-auto p-4 sm:p-6">
+<section id="auth" class="max-w-md mx-auto card p-6 mt-8">
+ <div class="text-center mb-5"><div class="text-4xl mb-2">🎓</div><h1 class="text-2xl font-extrabold text-blue-900">Bem-vindo ao Estudo Leve</h1><p class="text-sm text-slate-500 mt-1">Entre ou crie um perfil neste dispositivo para salvar seu progresso.</p></div>
+ <form id="authForm" class="space-y-3"><input id="email" type="email" class="field" placeholder="Seu e-mail" required><input id="password" type="password" minlength="6" class="field" placeholder="Senha (mínimo 6 caracteres)" required><input id="displayName" class="field" placeholder="Seu nome (para cadastro)"><div class="grid grid-cols-2 gap-2"><button class="btn" type="submit" id="loginBtn">Entrar</button><button class="btn2" type="button" id="signupBtn">Criar conta</button></div></form>
+ <p id="authMsg" class="text-sm mt-3 text-center text-blue-700"></p>
+ <p class="text-xs text-slate-400 mt-5 text-center">Sem Supabase: seus dados ficam salvos somente neste navegador e dispositivo.</p>
+</section>
+<div id="app" class="hidden space-y-6">
+ <section id="tab-inicio" class="tab space-y-5">
+  <div class="rounded-3xl p-6 sm:p-8 text-white bg-gradient-to-r from-blue-900 via-blue-700 to-sky-500 flex flex-col md:flex-row justify-between gap-5">
+   <div><p class="text-blue-100 text-sm font-bold">SUA ROTINA, NO SEU RITMO</p><h2 class="text-3xl font-extrabold mt-2">Olá, <span id="helloName">estudante</span>! 👋</h2><p class="text-blue-100 mt-2">Organize suas provas, avance na trilha e aprenda com o Tutor Leve IA.</p></div>
+   <div class="bg-white/15 rounded-2xl p-4 min-w-48"><div class="text-sm">Progresso da trilha</div><div class="text-3xl font-extrabold" id="progressPct">0%</div><div class="h-2 bg-white/30 rounded-full mt-2"><div id="progressBar" class="h-2 bg-white rounded-full" style="width:0%"></div></div><div id="progressCount" class="text-xs mt-2 text-blue-100">0 módulos concluídos</div></div>
+  </div>
+  <div class="grid lg:grid-cols-3 gap-5"><div class="lg:col-span-2 card p-5"><div class="flex justify-between items-center mb-4"><h3 class="font-extrabold text-blue-950 text-lg">🗓️ Horários de provas</h3><span class="text-xs text-blue-600">Agenda da turma</span></div><div id="examList" class="grid sm:grid-cols-2 gap-3"></div></div>
+  <div class="card p-5"><h3 class="font-extrabold text-blue-950 mb-3">📢 Avisos da turma</h3><div id="noticeList" class="space-y-3"></div><hr class="my-4"><label class="font-bold text-sm">Meu bloco de notas</label><textarea id="notes" rows="5" class="field mt-2" placeholder="Anotações pessoais..."></textarea><p id="notesStatus" class="text-xs text-blue-600 mt-1">Salvo individualmente</p></div></div>
+ </section>
+ <section id="tab-trilha" class="tab hidden space-y-4"><div><h2 class="text-2xl font-extrabold text-blue-950">Trilha interativa de estudos</h2><p class="text-slate-500 text-sm">Resumos, videoaulas e questões para praticar.</p></div><div id="moduleList" class="grid md:grid-cols-3 gap-3"></div><div id="moduleDetail" class="card p-5"><p class="text-slate-500">Selecione um módulo para começar.</p></div></section>
+ <section id="tab-biblioteca" class="tab hidden space-y-4"><h2 class="text-2xl font-extrabold text-blue-950">Biblioteca de materiais</h2><input id="librarySearch" class="field max-w-lg" placeholder="Buscar por título ou disciplina..."><div id="materialList" class="grid md:grid-cols-3 gap-3"></div></section>
+ <section id="tab-tutor" class="tab hidden space-y-4"><div class="card p-5"><div class="flex flex-wrap items-center justify-between gap-2"><div><h2 class="text-2xl font-extrabold text-blue-950">🤖 NAPE — Tutor do Estudo Leve</h2><p class="text-sm text-slate-500">Núcleo de Aprendizagem e Pesquisa Educacional</p></div><button type="button" id="clearNapeChat" class="btn2">Limpar conversa</button></div><p class="text-sm text-slate-500 mt-2">Respostas gratuitas baseadas nas aulas, materiais, avisos e provas cadastrados na plataforma.</p><div id="chat" class="my-4 h-80 overflow-y-auto bg-blue-50 rounded-2xl p-4 space-y-3"><div class="bg-white p-3 rounded-xl max-w-2xl whitespace-pre-wrap">Olá! Sou o NAPE! 💙
+
+Posso ajudar você a estudar usando os conteúdos publicados no Estudo Leve. O que vamos aprender hoje?</div></div><form id="chatForm" class="flex flex-col sm:flex-row gap-2"><input id="prompt" class="field flex-1" placeholder="Pergunte sobre uma aula, prova ou material..." required><button class="btn" id="napeSendBtn" type="submit">Enviar</button></form><p id="aiStatus" class="text-xs text-slate-500 mt-2">NAPE 1.0 • Sem API, sem chave e sem custo por mensagem. Responde com base no conteúdo cadastrado.</p></div></section>
+ <section id="tab-proprietario" class="tab hidden space-y-5"><div><h2 class="text-2xl font-extrabold text-blue-950">Painel do Proprietário</h2><p class="text-sm text-slate-500">Gerencie conteúdo compartilhado com toda a turma.</p></div>
+  <div class="grid lg:grid-cols-2 gap-4">
+   <form id="examForm" class="card p-5 space-y-3"><h3 class="font-extrabold">Adicionar prova</h3><input id="examSubject" class="field" placeholder="Disciplina" required><input id="examTitle" class="field" placeholder="Nome da avaliação" required><input id="examDate" type="datetime-local" class="field" required><input id="examRoom" class="field" placeholder="Sala / local"><button class="btn">Publicar prova</button></form>
+   <form id="noticeForm" class="card p-5 space-y-3"><h3 class="font-extrabold">Publicar aviso</h3><input id="noticeTitle" class="field" placeholder="Título" required><textarea id="noticeBody" class="field" placeholder="Mensagem para a turma" required></textarea><button class="btn">Publicar aviso</button></form>
+   <form id="moduleForm" class="card p-5 space-y-3 lg:col-span-2"><h3 class="font-extrabold">Adicionar módulo à trilha</h3><div class="grid sm:grid-cols-2 gap-2"><input id="moduleSubject" class="field" placeholder="Disciplina" required><input id="moduleTitle" class="field" placeholder="Título do módulo" required></div><textarea id="moduleSummary" class="field" rows="4" placeholder="Resumo do conteúdo" required></textarea><input id="moduleVideo" class="field" placeholder="Link do YouTube (opcional)"><textarea id="moduleQuestions" class="field" rows="4" placeholder='Questões em JSON: [{"q":"Pergunta?","options":["A","B","C","D"],"correct":0,"explanation":"Explicação"}]'></textarea><button class="btn">Adicionar módulo</button></form>
+   <form id="materialForm" class="card p-5 space-y-3 lg:col-span-2"><h3 class="font-extrabold">Adicionar material à biblioteca</h3><div class="grid sm:grid-cols-2 gap-2"><input id="matTitle" class="field" placeholder="Título" required><input id="matSubject" class="field" placeholder="Disciplina" required></div><div class="grid sm:grid-cols-2 gap-2"><input id="matType" class="field" placeholder="Tipo: PDF, resumo, slides..." required><input id="matLink" class="field" placeholder="Link externo (opcional)"></div><textarea id="matContent" class="field" rows="3" placeholder="Descrição do material" required></textarea><button class="btn">Publicar material</button></form>
+  </div><div class="card p-5"><h3 class="font-extrabold mb-2">Conteúdo publicado</h3><div id="adminContentList" class="text-sm text-slate-600"></div></div>
+ </section>
+</div>
+</main>
+<footer class="text-center text-xs text-slate-400 py-8">Estudo Leve • Aprender com leveza, evoluir sempre.</footer>
+<script>
+// Estudo Leve sem Supabase: autenticação e armazenamento locais.
+// Os dados ficam apenas neste navegador/dispositivo (localStorage).
+const OWNER_EMAIL = 'danielcoutinho2405@gmail.com';
+const USERS_KEY = 'estudoleve_users_v1';
+const CONTENT_KEY = 'estudoleve_content_v1';
+let user=null, isOwner=false, content={exams:[],notices:[],modules:[],materials:[]}, progress={completed:[],scores:{},notes:''}, selectedModule=null;
+const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function msg(t){$('authMsg').textContent=t}
+function setStatus(t){$('cloudState').textContent=t}
+function showTab(tab){document.querySelectorAll('.tab').forEach(x=>x.classList.add('hidden'));$('tab-'+tab).classList.remove('hidden');document.querySelectorAll('.nav').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab))}
+document.querySelectorAll('.nav').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+function readJSON(key,fallback){try{return JSON.parse(localStorage.getItem(key))??fallback}catch{return fallback}}
+function saveJSON(key,value){localStorage.setItem(key,JSON.stringify(value))}
+async function passwordHash(value){
+  if(window.crypto?.subtle){const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value));return [...new Uint8Array(bytes)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+  // Fallback para navegadores antigos; não use esta versão como autenticação de segurança.
+  return btoa(unescape(encodeURIComponent(value)));
+}
+$('authForm').addEventListener('submit',async e=>{e.preventDefault();await signIn()});
+$('signupBtn').addEventListener('click',signUp);
+async function signIn(){
+ const email=$('email').value.trim().toLowerCase(), password=$('password').value;
+ const users=readJSON(USERS_KEY,{}), account=users[email];
+ if(!account)return msg('Perfil não encontrado neste dispositivo. Clique em “Criar conta”.');
+ if(account.password!==await passwordHash(password))return msg('Senha incorreta.');
+ user={email,name:account.name||email.split('@')[0]};await boot();
+}
+async function signUp(){
+ const email=$('email').value.trim().toLowerCase(), password=$('password').value, name=$('displayName').value.trim()||email.split('@')[0];
+ if(!email||password.length<6)return msg('Informe um e-mail e uma senha com pelo menos 6 caracteres.');
+ const users=readJSON(USERS_KEY,{});if(users[email])return msg('Já existe um perfil com esse e-mail neste dispositivo. Entre normalmente.');
+ users[email]={name,password:await passwordHash(password)};saveJSON(USERS_KEY,users);user={email,name};await boot();
+}
+$('logoutBtn').onclick=()=>{user=null;location.reload()};
+async function boot(){
+ $('auth').classList.add('hidden');$('app').classList.remove('hidden');$('nav').classList.remove('hidden');$('logoutBtn').classList.remove('hidden');$('userLabel').textContent=user.email;
+ isOwner=user.email===OWNER_EMAIL;$('adminNav').classList.toggle('hidden',!isOwner);$('helloName').textContent=user.name||'estudante';
+ content={...content,...readJSON(CONTENT_KEY,content)};
+ progress=readJSON('estudoleve_progress_'+user.email,{completed:[],scores:{},notes:''});
+ $('notes').value=progress.notes||'';setStatus('Salvo neste dispositivo • '+(isOwner?'Proprietário':'Estudante'));
+ render();
+}
+function saveContent(){if(!isOwner)throw Error('Ação restrita ao proprietário.');saveJSON(CONTENT_KEY,content);render();setStatus('Conteúdo salvo neste dispositivo');}
+let saveTimer;function saveProgress(){if(!user)return;clearTimeout(saveTimer);$('notesStatus').textContent='Salvando…';saveTimer=setTimeout(()=>{saveJSON('estudoleve_progress_'+user.email,progress);$('notesStatus').textContent='Salvo neste dispositivo ✓'},200)}
+$('notes').addEventListener('input',()=>{progress.notes=$('notes').value;saveProgress()});
+function render(){renderExams();renderNotices();renderModules();renderMaterials();renderProgress();if(isOwner)renderAdmin()}
+function renderExams(){$('examList').innerHTML=content.exams.length?content.exams.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(x=>`<div class="rounded-xl bg-blue-50 border border-blue-100 p-4"><div class="text-xs font-bold text-blue-700">${esc(x.subject)}</div><div class="font-bold mt-1">${esc(x.title)}</div><div class="text-sm text-slate-600 mt-2">🕒 ${new Date(x.date).toLocaleString('pt-BR')}</div><div class="text-xs text-slate-500">${esc(x.room||'Local não informado')}</div></div>`).join(''):'<p class="text-sm text-slate-400">Nenhuma prova cadastrada ainda.</p>'}
+function renderNotices(){$('noticeList').innerHTML=content.notices.length?content.notices.slice().reverse().map(n=>`<div class="bg-blue-50 rounded-xl p-3"><div class="font-bold text-sm text-blue-900">${esc(n.title)}</div><p class="text-sm text-slate-600 mt-1">${esc(n.body)}</p><div class="text-xs text-blue-500 mt-2">${new Date(n.created_at).toLocaleDateString('pt-BR')}</div></div>`).join(''):'<p class="text-sm text-slate-400">Sem avisos no momento.</p>'}
+function renderProgress(){const total=content.modules.length,done=progress.completed.length,pct=total?Math.round(done/total*100):0;$('progressPct').textContent=pct+'%';$('progressBar').style.width=pct+'%';$('progressCount').textContent=`${done} de ${total} módulos concluídos`}
+function renderModules(){$('moduleList').innerHTML=content.modules.map(m=>`<button class="card p-4 text-left hover:border-blue-400" data-module="${esc(m.id)}"><div class="text-xs font-bold text-blue-600">${esc(m.subject)}</div><div class="font-bold mt-1">${esc(m.title)}</div><div class="text-xs mt-2">${progress.completed.includes(m.id)?'✅ Concluído':'📖 Disponível'}</div></button>`).join('')||'<p class="text-slate-400">O proprietário ainda não publicou módulos.</p>';document.querySelectorAll('[data-module]').forEach(b=>b.onclick=()=>openModule(b.dataset.module))}
+function openModule(id){selectedModule=content.modules.find(m=>m.id===id);if(!selectedModule)return;const m=selectedModule;$('moduleDetail').innerHTML=`<div class="flex flex-wrap justify-between gap-3"><div><div class="text-xs font-bold text-blue-600">${esc(m.subject)}</div><h3 class="text-xl font-extrabold mt-1">${esc(m.title)}</h3></div><button id="doneBtn" class="btn2">${progress.completed.includes(m.id)?'Desmarcar conclusão':'Marcar como concluído'}</button></div><div class="mt-4 whitespace-pre-wrap text-sm leading-7">${esc(m.summary)}</div>${m.video?`<div class="mt-4"><a class="text-blue-700 underline font-semibold" target="_blank" rel="noopener" href="${esc(m.video)}">▶ Abrir videoaula</a></div>`:''}<div class="mt-5 space-y-4"><h4 class="font-extrabold">Banco de questões</h4>${(m.questions||[]).map((q,i)=>`<div class="bg-blue-50 rounded-xl p-4"><p class="font-bold">${i+1}. ${esc(q.q)}</p><div class="grid sm:grid-cols-2 gap-2 mt-3">${q.options.map((o,j)=>`<label class="bg-white rounded-lg p-2 text-sm"><input type="radio" name="q${i}" value="${j}"> ${esc(o)}</label>`).join('')}</div><div id="fb${i}" class="text-sm mt-2"></div></div>`).join('')}<button id="gradeBtn" class="btn">Corrigir e salvar resultado</button><span id="gradeResult" class="text-sm font-bold text-blue-700"></span></div>`;
+ $('doneBtn').onclick=async()=>{progress.completed=progress.completed.includes(m.id)?progress.completed.filter(x=>x!==m.id):[...progress.completed,m.id];await saveProgress();render();openModule(id)};
+ $('gradeBtn').onclick=async()=>{const qs=m.questions||[];let hits=0;qs.forEach((q,i)=>{const chosen=document.querySelector(`input[name="q${i}"]:checked`);const ok=chosen&&Number(chosen.value)===Number(q.correct);if(ok)hits++;$('fb'+i).textContent=(ok?'✓ ':'✗ ')+(q.explanation||'Revise o resumo e tente novamente.');});const score=qs.length?Math.round(hits/qs.length*100):0;progress.scores[m.id]=score;if(score>=70&&!progress.completed.includes(m.id))progress.completed.push(m.id);await saveProgress();$('gradeResult').textContent=`Resultado: ${hits}/${qs.length} (${score}%)`;renderProgress();};
+}
+function renderMaterials(){const q=$('librarySearch').value.toLowerCase();$('materialList').innerHTML=content.materials.filter(m=>(m.title+' '+m.subject+' '+m.content).toLowerCase().includes(q)).map(m=>`<article class="card p-4"><div class="text-xs text-blue-600 font-bold">${esc(m.subject)} • ${esc(m.type)}</div><h3 class="font-extrabold mt-2">${esc(m.title)}</h3><p class="text-sm text-slate-600 mt-2">${esc(m.content)}</p>${m.link?`<a class="inline-block mt-3 text-sm text-blue-700 underline" target="_blank" rel="noopener" href="${esc(m.link)}">Abrir material</a>`:''}</article>`).join('')||'<p class="text-slate-400">Nenhum material encontrado.</p>'}
+$('librarySearch').oninput=renderMaterials;
+function renderAdmin(){$('adminContentList').innerHTML=`${content.exams.length} provas • ${content.notices.length} avisos • ${content.modules.length} módulos • ${content.materials.length} materiais`}
+function needOwner(){if(!isOwner)throw Error('Ação restrita ao proprietário.')}
+$('examForm').onsubmit=async e=>{e.preventDefault();try{needOwner();content.exams.push({id:crypto.randomUUID(),subject:$('examSubject').value,title:$('examTitle').value,date:$('examDate').value,room:$('examRoom').value});await saveContent();e.target.reset()}catch(x){alert(x.message)}};
+$('noticeForm').onsubmit=async e=>{e.preventDefault();try{needOwner();content.notices.push({id:crypto.randomUUID(),title:$('noticeTitle').value,body:$('noticeBody').value,created_at:new Date().toISOString()});await saveContent();e.target.reset()}catch(x){alert(x.message)}};
+$('moduleForm').onsubmit=async e=>{e.preventDefault();try{needOwner();const raw=$('moduleQuestions').value.trim();const questions=raw?JSON.parse(raw):[];content.modules.push({id:crypto.randomUUID(),subject:$('moduleSubject').value,title:$('moduleTitle').value,summary:$('moduleSummary').value,video:$('moduleVideo').value,questions});await saveContent();e.target.reset()}catch(x){alert('Não foi possível publicar: '+x.message)}};
+$('materialForm').onsubmit=async e=>{e.preventDefault();try{needOwner();content.materials.push({id:crypto.randomUUID(),title:$('matTitle').value,subject:$('matSubject').value,type:$('matType').value,link:$('matLink').value,content:$('matContent').value});await saveContent();e.target.reset()}catch(x){alert(x.message)}};
+// NAPE 1.0 — mecanismo local de busca e respostas sobre o conteúdo da plataforma.
+const NAPE = {
+ name:'NAPE', version:'1.0', history:[],
+ stopWords:new Set(['para','como','qual','quais','que','uma','com','por','dos','das','aos','nas','nos','sobre','me','explique','fale','quero','preciso','pode','voce','isso','essa','este','esta','sao','ser','tem','dos','das','de','do','da','e','ou','em','um','uma']),
+ normalize(text){return String(text||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^\w\s]/g,' ').trim()},
+ getKnowledge(){
+  const docs=[];
+  (content.modules||[]).forEach(m=>docs.push({type:'Aula',title:m.title||'Aula',subject:m.subject||'Geral',content:String(m.summary||''),extra:(m.questions||[]).map(q=>q.q+' '+(q.explanation||'')).join(' '),video:m.video||''}));
+  (content.materials||[]).forEach(m=>docs.push({type:'Biblioteca',title:m.title||'Material',subject:m.subject||'Geral',content:[m.type,m.content].filter(Boolean).join(' — '),extra:m.link||''}));
+  (content.notices||[]).forEach(n=>docs.push({type:'Aviso',title:n.title||'Aviso',subject:'Comunicados',content:n.body||''}));
+  (content.exams||[]).forEach(x=>docs.push({type:'Prova',title:x.title||'Avaliação',subject:x.subject||'Geral',content:`Prova de ${x.subject||'disciplina'}. Data e horário: ${x.date||'não informados'}. Local: ${x.room||'não informado'}.`}));
+  return docs.filter(d=>d.title||d.content||d.extra);
+ },
+ search(question){
+  const terms=this.normalize(question).split(/\s+/).filter(w=>w.length>2&&!this.stopWords.has(w));
+  return this.getKnowledge().map(doc=>{const title=this.normalize(doc.title),subject=this.normalize(doc.subject),body=this.normalize(doc.content+' '+(doc.extra||''));let score=0;terms.forEach(t=>{if(title.includes(t))score+=5;if(subject.includes(t))score+=4;if(body.includes(t))score+=2});if(title.length>3&&this.normalize(question).includes(title))score+=10;return {...doc,score}}).filter(d=>d.score>0).sort((a,b)=>b.score-a.score).slice(0,5);
+ },
+ answer(question){
+  const q=this.normalize(question), results=this.search(question), relevant=results.filter(d=>d.score>=2);
+  if(!relevant.length)return {text:'Ainda não encontrei esse assunto nos conteúdos publicados no Estudo Leve. 💙\n\nMinha base consulta aulas, materiais, avisos e provas cadastrados pelo proprietário. Peça para adicionar um conteúdo relacionado e tente novamente.',sources:[]};
+  const isSummary=['resumo','resuma','revisao','revisar'].some(w=>q.includes(w));
+  const isExam=['prova','avaliacao','quando','horario','data'].some(w=>q.includes(w));
+  const isExplain=['explique','explicar','entender','ensine'].some(w=>q.includes(w));
+  let selected=relevant;
+  if(isExam){const exams=relevant.filter(d=>d.type==='Prova');if(exams.length)selected=exams;}
+  let response=isExam&&selected.some(d=>d.type==='Prova')?'📅 INFORMAÇÕES SOBRE AS PROVAS\n\n':isSummary?'📚 REVISÃO BASEADA NA PLATAFORMA\n\n':isExplain?'📖 VAMOS ESTUDAR ESTE ASSUNTO!\n\n':'💡 ENCONTREI ESTAS INFORMAÇÕES NO ESTUDO LEVE\n\n';
+  selected.forEach((d,i)=>{response+=`${i+1}. ${d.title} (${d.type})\nDisciplina: ${d.subject}\n${d.content||d.extra||'Sem descrição disponível.'}\n`;if(d.video)response+=`Videoaula: ${d.video}\n`;response+='\n'});
+  response+='━━━━━━━━━━━━━━━━━━\n🎓 NAPE | Núcleo de Aprendizagem e Pesquisa Educacional\nResposta baseada nos conteúdos cadastrados na plataforma.';
+  return {text:response,sources:selected.map(d=>d.title)};
+ }
+};
+function napeMessage(sender,message){
+ const chat=$('chat'),wrap=document.createElement('div');
+ wrap.className=sender==='user'?'flex justify-end':'flex justify-start';
+ const bubble=document.createElement('div');bubble.className=sender==='user'?'bg-blue-700 text-white p-3 rounded-xl max-w-2xl whitespace-pre-wrap':'bg-white border border-blue-100 text-slate-700 p-3 rounded-xl max-w-2xl whitespace-pre-wrap';bubble.textContent=message;wrap.appendChild(bubble);chat.appendChild(wrap);chat.scrollTop=chat.scrollHeight;return wrap;
+}
+$('chatForm').onsubmit=async e=>{e.preventDefault();const input=$('prompt'),button=$('napeSendBtn'),question=input.value.trim();if(!question)return;input.value='';input.disabled=true;button.disabled=true;napeMessage('user',question);const loading=napeMessage('ai','🔎 Consultando os conteúdos do Estudo Leve...');await new Promise(resolve=>setTimeout(resolve,250));const result=NAPE.answer(question);loading.remove();napeMessage('ai',result.text);NAPE.history.push({question,answer:result.text,date:new Date().toISOString()});input.disabled=false;button.disabled=false;input.focus();};
+$('clearNapeChat').onclick=()=>{$('chat').innerHTML='';NAPE.history=[];napeMessage('ai','Olá! Sou o NAPE! 💙\n\nVamos começar uma nova sessão de estudos?');};
+window.sendQuickPrompt=function(text){showTab('tutor');$('prompt').value=text;$('chatForm').requestSubmit()};
+window.askTutorAboutCurrentLesson=function(){if(selectedModule)sendQuickPrompt(`Explique o conteúdo de ${selectedModule.title}, da disciplina ${selectedModule.subject}.`)};
+window.askTutorForExamPrep=function(subject,title){sendQuickPrompt(`Faça uma revisão para a prova ${title} de ${subject}.`)};
+window.clearTutorChat=function(){$('clearNapeChat').click()};
+setStatus('Salvamento local • sem Supabase');
+</script>
+</body></html>
