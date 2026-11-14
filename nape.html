@@ -1,0 +1,212 @@
+
+const NAPE = {
+    name: "NAPE",
+    version: "1.0",
+    history: [],
+
+    stopWords: new Set([
+        "para", "como", "qual", "quais", "que",
+        "uma", "com", "por", "dos", "das",
+        "nas", "nos", "sobre", "me", "fale",
+        "quero", "preciso", "pode", "voce",
+        "isso", "essa", "este", "esta", "sao",
+        "ser", "tem", "explique"
+    ]),
+
+    normalize(text) {
+        return String(text || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .replace(/[^\w\s]/g, " ")
+            .trim();
+    },
+
+    stripHTML(html) {
+        const element = document.createElement("div");
+        element.innerHTML = html || "";
+        return element.textContent || "";
+    },
+
+    // Consulta os conteúdos cadastrados na plataforma.
+    getKnowledge() {
+        const documents = [];
+
+        state.lessons.forEach(lesson => {
+            documents.push({
+                type: "Aula",
+                title: lesson.title,
+                subject: lesson.subject,
+                content: this.stripHTML(lesson.summary),
+                extra: lesson.description || ""
+            });
+        });
+
+        state.materials.forEach(material => {
+            documents.push({
+                type: "Biblioteca",
+                title: material.title,
+                subject: material.subject,
+                content: material.description || ""
+            });
+        });
+
+        state.announcements.forEach(announcement => {
+            documents.push({
+                type: "Aviso",
+                title: announcement.title,
+                subject: "Comunicados",
+                content: announcement.content || ""
+            });
+        });
+
+        state.exams.forEach(exam => {
+            documents.push({
+                type: "Prova",
+                title: exam.title,
+                subject: exam.subject,
+                content:
+                    `Prova de ${exam.subject}. ` +
+                    `Data: ${exam.date}. ` +
+                    `Horário: ${exam.time}. ` +
+                    `Local: ${exam.location}.`
+            });
+        });
+
+        return documents.filter(d =>
+            d.title || d.content || d.extra
+        );
+    },
+
+    // Busca os conteúdos mais relevantes.
+    search(question) {
+        const normalizedQuestion = this.normalize(question);
+
+        const terms = normalizedQuestion
+            .split(/\s+/)
+            .filter(word =>
+                word.length > 2 &&
+                !this.stopWords.has(word)
+            );
+
+        return this.getKnowledge()
+            .map(doc => {
+                const title = this.normalize(doc.title);
+                const subject = this.normalize(doc.subject);
+
+                const content = this.normalize(
+                    doc.content + " " + (doc.extra || "")
+                );
+
+                let score = 0;
+
+                terms.forEach(term => {
+                    if (title.includes(term)) score += 5;
+                    if (subject.includes(term)) score += 4;
+                    if (content.includes(term)) score += 2;
+                });
+
+                if (
+                    title.length > 3 &&
+                    normalizedQuestion.includes(title)
+                ) {
+                    score += 10;
+                }
+
+                return { ...doc, score };
+            })
+            .filter(doc => doc.score > 0)
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 5);
+    },
+
+    // Gera respostas com base nos conteúdos encontrados.
+    answer(question) {
+        const q = this.normalize(question);
+        const results = this.search(question);
+
+        if (!results.length) {
+            return {
+                text:
+                    "Ainda não encontrei esse assunto na minha base de conhecimento. 💙\n\n" +
+                    "Minha função é ensinar utilizando os conteúdos publicados no Estudo Leve.\n\n" +
+                    "Peça ao proprietário para adicionar uma aula ou material relacionado!",
+                sources: []
+            };
+        }
+
+        const relevant = results.filter(doc => doc.score >= 2);
+
+        if (!relevant.length) {
+            return {
+                text: "Não encontrei informações suficientes para responder com segurança.",
+                sources: []
+            };
+        }
+
+        const isSummary =
+            q.includes("resumo") ||
+            q.includes("resuma") ||
+            q.includes("revisao");
+
+        const isExam =
+            q.includes("prova") ||
+            q.includes("avaliacao") ||
+            q.includes("quando");
+
+        const isExplain =
+            q.includes("explique") ||
+            q.includes("explicar") ||
+            q.includes("entender");
+
+        let response = "";
+
+        if (isExam) {
+            const exams = relevant.filter(d => d.type === "Prova");
+
+            if (exams.length) {
+                response = "📅 INFORMAÇÕES SOBRE AS PROVAS\n\n";
+
+                exams.forEach(d => {
+                    response +=
+                        `${d.subject}: ${d.title}\n` +
+                        `${d.content}\n\n`;
+                });
+            }
+        }
+
+        if (!response && isSummary) {
+            response = "📚 REVISÃO DOS CONTEÚDOS\n\n";
+
+            relevant.forEach(d => {
+                response +=
+                    `${d.title} (${d.subject})\n` +
+                    `${d.content || d.extra}\n\n`;
+            });
+        }
+
+        if (!response) {
+            response = isExplain
+                ? "📖 VAMOS ESTUDAR ESTE ASSUNTO!\n\n"
+                : "💡 ENCONTREI ESTAS INFORMAÇÕES:\n\n";
+
+            relevant.forEach((d, index) => {
+                response +=
+                    `${index + 1}. ${d.title}\n` +
+                    `Disciplina: ${d.subject}\n` +
+                    `${d.content || d.extra || "Sem descrição."}\n\n`;
+            });
+        }
+
+        response +=
+            "━━━━━━━━━━━━━━━━━━\n" +
+            "🎓 NAPE | Núcleo de Aprendizagem e Pesquisa Educacional\n" +
+            "Resposta baseada nos conteúdos cadastrados na plataforma.";
+
+        return {
+            text: response,
+            sources: relevant.map(d => d.title)
+        };
+    }
+};
+
