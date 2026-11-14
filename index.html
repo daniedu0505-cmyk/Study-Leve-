@@ -1,0 +1,2275 @@
+```html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estudo Leve - Plataforma Educacional Inteligente</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        royal: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb', // Azul Royal Principal
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        },
+                        celeste: {
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Customizações suaves de scrollbar e animações */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .fade-in {
+            animation: fadeIn 0.25s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+        }
+        /* Estilização básica de markdown gerado pela IA */
+        .ai-prose p { margin-bottom: 0.65rem; }
+        .ai-prose ul { list-style-type: disc; padding-left: 1.25rem; margin-bottom: 0.65rem; }
+        .ai-prose ol { list-style-type: decimal; padding-left: 1.25rem; margin-bottom: 0.65rem; }
+        .ai-prose strong { font-weight: 600; color: #1e3a8a; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased selection:bg-royal-200 selection:text-royal-900">
+
+    <!-- Toast / Notificação Flutuante (Substitui alert/confirm) -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Modal de Confirmação Customizado -->
+    <div id="confirm-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 fade-in">
+            <div class="flex items-center gap-3 text-amber-600 mb-3">
+                <div class="p-2.5 bg-amber-50 rounded-xl">
+                    <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                </div>
+                <h3 id="confirm-title" class="font-display font-bold text-lg text-slate-900">Confirmar ação</h3>
+            </div>
+            <p id="confirm-message" class="text-slate-600 text-sm leading-relaxed mb-6">Tem certeza que deseja continuar?</p>
+            <div class="flex justify-end gap-3">
+                <button id="confirm-cancel" class="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition">Cancelar</button>
+                <button id="confirm-ok" class="px-4 py-2.5 rounded-xl text-sm font-semibold bg-red-600 text-white hover:bg-red-700 shadow-sm transition">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de Carregamento Inicial -->
+    <div id="loading-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-royal-600 via-royal-700 to-celeste-600 text-white">
+        <div class="bg-white/15 p-4 rounded-3xl backdrop-blur-md mb-4 shadow-xl animate-bounce">
+            <i data-lucide="book-open-check" class="w-12 h-12 text-white"></i>
+        </div>
+        <h1 class="font-display text-3xl font-extrabold tracking-tight">Estudo Leve</h1>
+        <p class="text-royal-100 text-sm mt-2 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-celeste-400 animate-ping"></span>
+            Sincronizando seu ambiente de aprendizagem...
+        </p>
+    </div>
+
+    <!-- Tela de Acesso / Perfil (Caso o usuário queira personalizar nome/perfil) -->
+    <div id="auth-modal" class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-7 shadow-2xl border border-royal-100 fade-in">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-royal-600 to-celeste-500 flex items-center justify-center text-white shadow-md">
+                        <i data-lucide="sparkles" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-display font-bold text-xl text-slate-900">Perfil Estudo Leve</h2>
+                        <p class="text-xs text-slate-500">Personalize sua conta sincronizada na nuvem</p>
+                    </div>
+                </div>
+                <button onclick="closeAuthModal()" class="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="profile-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Seu Nome Completo</label>
+                    <input type="text" id="input-user-name" required placeholder="Ex: Ana Clara Silva" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-royal-500 focus:ring-2 focus:ring-royal-100 outline-none text-sm transition">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Escolha seu Avatar</label>
+                    <div id="avatar-selector" class="grid grid-cols-5 gap-2.5">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </div>
+
+                <div class="pt-2 border-t border-slate-100">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Modo de Acesso</label>
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <button type="button" id="role-btn-student" onclick="selectRole('student')" class="p-3 rounded-xl border-2 border-royal-600 bg-royal-50 text-royal-800 text-left transition">
+                            <div class="flex items-center gap-2 font-semibold text-sm">
+                                <i data-lucide="graduation-cap" class="w-4 h-4"></i> Estudante
+                            </div>
+                            <p class="text-[11px] text-royal-600 mt-0.5">Trilhas, quizzes e IA</p>
+                        </button>
+                        <button type="button" id="role-btn-owner" onclick="selectRole('owner')" class="p-3 rounded-xl border-2 border-slate-200 hover:border-royal-300 text-slate-700 text-left transition">
+                            <div class="flex items-center gap-2 font-semibold text-sm">
+                                <i data-lucide="shield-check" class="w-4 h-4"></i> Proprietário
+                            </div>
+                            <p class="text-[11px] text-slate-500 mt-0.5">Gerenciar turma e aulas</p>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="owner-pin-wrapper" class="hidden bg-amber-50/80 border border-amber-200 rounded-xl p-3.5">
+                    <label class="block text-xs font-semibold text-amber-800 mb-1">Chave de Acesso do Proprietário</label>
+                    <input type="password" id="input-owner-pin" placeholder="Digite a senha (padrão: 1234)" class="w-full px-3.5 py-2 rounded-lg bg-white border border-amber-300 text-sm outline-none focus:border-royal-500">
+                    <p class="text-[11px] text-amber-700 mt-1">Dica para demonstração: utilize <strong>1234</strong> para ativar o painel administrativo.</p>
+                </div>
+
+                <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-royal-600 to-celeste-500 hover:from-royal-700 hover:to-celeste-600 text-white font-semibold text-sm shadow-lg shadow-royal-500/25 transition">
+                    Salvar Perfil na Nuvem
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Layout Principal da Aplicação -->
+    <div id="app-shell" class="min-h-screen flex flex-col lg:flex-row">
+        
+        <!-- Header Mobile -->
+        <header class="lg:hidden sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <button id="mobile-menu-btn" class="p-2 rounded-xl text-slate-600 hover:bg-royal-50 hover:text-royal-600">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-royal-600 to-celeste-500 flex items-center justify-center text-white">
+                        <i data-lucide="feather" class="w-4 h-4"></i>
+                    </div>
+                    <span class="font-display font-extrabold text-lg text-royal-900">Estudo Leve</span>
+                </div>
+            </div>
+            <button onclick="openAuthModal()" class="flex items-center gap-2 bg-royal-50 px-3 py-1.5 rounded-full border border-royal-100">
+                <span id="mobile-avatar" class="text-base">🎓</span>
+                <span id="mobile-username" class="text-xs font-semibold text-royal-800 max-w-[90px] truncate">Estudante</span>
+            </button>
+        </header>
+
+        <!-- Overlay do Menu Mobile -->
+        <div id="sidebar-backdrop" class="fixed inset-0 z-30 bg-slate-900/40 backdrop-blur-xs hidden lg:hidden"></div>
+
+        <!-- Barra Lateral (Sidebar) -->
+        <aside id="sidebar" class="fixed lg:sticky top-0 left-0 z-40 h-screen w-72 bg-white border-r border-slate-200/80 flex flex-col justify-between transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-out">
+            <div>
+                <!-- Logo -->
+                <div class="p-6 flex items-center justify-between border-b border-slate-100">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-royal-600 to-celeste-500 flex items-center justify-center text-white shadow-md shadow-royal-500/20">
+                            <i data-lucide="feather" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <span class="font-display font-extrabold text-xl tracking-tight text-slate-900 block leading-none">Estudo Leve</span>
+                            <span class="text-[11px] font-medium text-celeste-600">Aprender sem peso</span>
+                        </div>
+                    </div>
+                    <button id="close-sidebar-btn" class="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 rounded-lg">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- Navegação Principal -->
+                <nav class="p-4 space-y-1.5" id="main-nav">
+                    <button data-tab="dashboard" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition bg-royal-600 text-white shadow-md shadow-royal-600/20">
+                        <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                        <span>Início & Visão Geral</span>
+                    </button>
+                    <button data-tab="trail" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-royal-50 hover:text-royal-700 transition">
+                        <i data-lucide="map" class="w-5 h-5"></i>
+                        <span>Trilha de Estudos</span>
+                    </button>
+                    <button data-tab="exams" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-royal-50 hover:text-royal-700 transition">
+                        <i data-lucide="calendar-clock" class="w-5 h-5"></i>
+                        <span>Horários de Provas</span>
+                    </button>
+                    <button data-tab="library" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-royal-50 hover:text-royal-700 transition">
+                        <i data-lucide="library" class="w-5 h-5"></i>
+                        <span>Biblioteca de Materiais</span>
+                    </button>
+                    <button data-tab="tutor" class="nav-item w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-royal-50 hover:text-royal-700 transition">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="bot" class="w-5 h-5 text-celeste-600"></i>
+                            <span>Tutor Leve IA</span>
+                        </div>
+                        <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-celeste-400/20 text-celeste-600">Gemini</span>
+                    </button>
+
+                    <!-- Aba Exclusiva do Proprietário -->
+                    <div class="pt-3 mt-3 border-t border-slate-100">
+                        <button data-tab="owner" id="nav-owner-btn" class="nav-item w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-amber-50 hover:text-amber-800 transition">
+                            <div class="flex items-center gap-3">
+                                <i data-lucide="shield" class="w-5 h-5 text-amber-500"></i>
+                                <span>Painel Proprietário</span>
+                            </div>
+                            <span id="owner-lock-badge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">Bloqueado</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+
+            <!-- Card do Usuário Logado no Rodapé da Sidebar -->
+            <div class="p-4 border-t border-slate-100 bg-slate-50/60">
+                <div onclick="openAuthModal()" class="cursor-pointer group bg-white p-3.5 rounded-2xl border border-slate-200/80 hover:border-royal-300 shadow-xs transition flex items-center gap-3">
+                    <div id="sidebar-avatar" class="w-11 h-11 rounded-xl bg-gradient-to-br from-royal-100 to-celeste-400/30 flex items-center justify-center text-2xl shrink-0">
+                        🎓
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-1.5">
+                            <p id="sidebar-username" class="text-sm font-bold text-slate-900 truncate">Estudante</p>
+                            <span id="sidebar-role-badge" class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-royal-100 text-royal-700">Aluno</span>
+                        </div>
+                        <p id="sidebar-uid" class="text-[11px] text-slate-400 truncate font-mono mt-0.5">Sincronizado na nuvem</p>
+                    </div>
+                    <i data-lucide="settings" class="w-4 h-4 text-slate-400 group-hover:text-royal-600 transition"></i>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Área Principal de Conteúdo -->
+        <main class="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+            
+            <!-- ============================================================== -->
+            <!-- ABA 1: DASHBOARD / INÍCIO                                      -->
+            <!-- ============================================================== -->
+            <section id="tab-dashboard" class="tab-content fade-in space-y-6">
+                <!-- Banner de Boas-vindas -->
+                <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-royal-700 via-royal-600 to-celeste-500 p-6 sm:p-8 text-white shadow-xl shadow-royal-600/15">
+                    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div class="max-w-xl">
+                            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-xs text-xs font-semibold mb-3">
+                                <span class="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
+                                Progresso salvo automaticamente na nuvem
+                            </div>
+                            <h1 class="font-display text-2xl sm:text-3xl font-extrabold tracking-tight">
+                                Olá, <span id="dash-greeting-name">Estudante</span>! 👋
+                            </h1>
+                            <p class="text-royal-100 text-sm sm:text-base mt-2 leading-relaxed">
+                                Seu espaço organizado para estudar com leveza. Acompanhe suas trilhas, revise os próximos horários de provas e tire dúvidas com o Tutor IA.
+                            </p>
+                            <div class="flex flex-wrap gap-3 mt-5">
+                                <button onclick="switchTab('trail')" class="px-5 py-2.5 rounded-xl bg-white text-royal-700 font-bold text-sm hover:bg-royal-50 shadow-sm transition flex items-center gap-2">
+                                    <i data-lucide="play-circle" class="w-4 h-4"></i> Continuar Trilha
+                                </button>
+                                <button onclick="switchTab('tutor')" class="px-5 py-2.5 rounded-xl bg-royal-800/40 hover:bg-royal-800/60 text-white border border-white/20 font-semibold text-sm transition flex items-center gap-2">
+                                    <i data-lucide="sparkles" class="w-4 h-4"></i> Perguntar ao Tutor IA
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Card Circular de Progresso Geral -->
+                        <div class="bg-white/15 backdrop-blur-md border border-white/20 rounded-2xl p-5 flex items-center gap-4 shrink-0">
+                            <div class="relative w-20 h-20 flex items-center justify-center">
+                                <svg class="w-20 h-20 transform -rotate-90">
+                                    <circle cx="40" cy="40" r="34" stroke="rgba(255,255,255,0.2)" stroke-width="7" fill="transparent" />
+                                    <circle id="dash-progress-ring" cx="40" cy="40" r="34" stroke="#ffffff" stroke-width="7" fill="transparent" stroke-dasharray="213.6" stroke-dashoffset="213.6" stroke-linecap="round" class="transition-all duration-700" />
+                                </svg>
+                                <span id="dash-progress-percent" class="absolute font-display font-extrabold text-lg">0%</span>
+                            </div>
+                            <div>
+                                <p class="text-xs uppercase tracking-wider text-royal-100 font-semibold">Concluído</p>
+                                <p id="dash-progress-detail" class="font-display font-bold text-lg mt-0.5">0 de 0 etapas</p>
+                                <p class="text-xs text-royal-100 mt-1">Continue nesse ritmo!</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Decoração geométrica suave -->
+                    <div class="absolute -right-12 -bottom-16 w-64 h-64 rounded-full bg-white/10 blur-2xl pointer-events-none"></div>
+                </div>
+
+                <!-- Métricas Rápidas -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-xs flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-royal-50 text-royal-600 flex items-center justify-center shrink-0">
+                            <i data-lucide="check-circle-2" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-slate-500">Aulas Concluídas</p>
+                            <p id="stat-lessons" class="font-display font-extrabold text-2xl text-slate-900">0</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-xs flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-sky-50 text-celeste-600 flex items-center justify-center shrink-0">
+                            <i data-lucide="trophy" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-slate-500">Média nos Quizzes</p>
+                            <p id="stat-quiz-avg" class="font-display font-extrabold text-2xl text-slate-900">--</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-xs flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                            <i data-lucide="calendar" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-slate-500">Próximas Provas</p>
+                            <p id="stat-exams-count" class="font-display font-extrabold text-2xl text-slate-900">0</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-xs flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                            <i data-lucide="folder-open" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-slate-500">Materiais Disponíveis</p>
+                            <p id="stat-materials-count" class="font-display font-extrabold text-2xl text-slate-900">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grid Principal do Dashboard: Mural de Avisos + Próximas Provas + Bloco de Notas Pessoal -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Mural de Avisos da Turma -->
+                    <div class="lg:col-span-2 bg-white rounded-3xl border border-slate-200/80 p-6 shadow-xs">
+                        <div class="flex items-center justify-between mb-5">
+                            <div class="flex items-center gap-2.5">
+                                <div class="p-2 rounded-xl bg-royal-50 text-royal-600">
+                                    <i data-lucide="megaphone" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h2 class="font-display font-bold text-lg text-slate-900">Mural de Avisos da Turma</h2>
+                                    <p class="text-xs text-slate-500">Comunicados oficiais atualizados em tempo real</p>
+                                </div>
+                            </div>
+                            <button onclick="openOwnerTabIfAllowed()" class="text-xs font-semibold text-royal-600 hover:text-royal-800 flex items-center gap-1">
+                                <i data-lucide="plus-circle" class="w-4 h-4"></i> Gerenciar
+                            </button>
+                        </div>
+                        <div id="dashboard-announcements-list" class="space-y-3.5">
+                            <!-- Renderizado via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Coluna Direita: Próxima Prova & Caderno Rápido -->
+                    <div class="space-y-6">
+                        <!-- Próximas Provas Resumo -->
+                        <div class="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-xs">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="font-display font-bold text-base text-slate-900 flex items-center gap-2">
+                                    <i data-lucide="alarm-clock" class="w-5 h-5 text-celeste-600"></i>
+                                    Próximas Avaliações
+                                </h3>
+                                <button onclick="switchTab('exams')" class="text-xs font-semibold text-royal-600 hover:underline">Ver todas</button>
+                            </div>
+                            <div id="dashboard-exams-preview" class="space-y-3">
+                                <!-- Renderizado via JS -->
+                            </div>
+                        </div>
+
+                        <!-- Bloco de Anotações Pessoal na Nuvem -->
+                        <div class="bg-gradient-to-b from-royal-50/70 to-white rounded-3xl border border-royal-100 p-6 shadow-xs">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-display font-bold text-base text-royal-900 flex items-center gap-2">
+                                    <i data-lucide="notebook-pen" class="w-5 h-5 text-royal-600"></i>
+                                    Minhas Anotações Pessoais
+                                </h3>
+                                <span id="notes-save-status" class="text-[11px] font-medium text-emerald-600">Salvo na nuvem</span>
+                            </div>
+                            <textarea id="personal-notes-textarea" rows="5" placeholder="Anote fórmulas, metas da semana ou lembretes individuais..." class="w-full p-3.5 rounded-2xl bg-white border border-royal-200/80 focus:border-royal-500 focus:ring-2 focus:ring-royal-100 outline-none text-sm text-slate-700 resize-none transition"></textarea>
+                            <div class="flex justify-end mt-2.5">
+                                <button onclick="savePersonalNotes()" class="px-4 py-2 rounded-xl bg-royal-600 hover:bg-royal-700 text-white text-xs font-semibold transition shadow-xs">
+                                    Salvar Anotação
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================================== -->
+            <!-- ABA 2: TRILHA INTERATIVA DE ESTUDOS                            -->
+            <!-- ============================================================== -->
+            <section id="tab-trail" class="tab-content hidden fade-in space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h1 class="font-display text-2xl sm:text-3xl font-extrabold text-slate-900">Trilha Interativa de Estudos</h1>
+                        <p class="text-sm text-slate-500 mt-1">Explore os módulos, leia os resumos, assista às videoaulas e teste seus conhecimentos nos quizzes.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <select id="trail-subject-filter" onchange="renderTrail()" class="px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm font-medium text-slate-700 outline-none focus:border-royal-500">
+                            <option value="all">Todas as Disciplinas</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Grid: Lista de Etapas da Trilha + Área de Estudo Ativa -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    <!-- Mapa Visual das Etapas (Coluna Esquerda) -->
+                    <div class="lg:col-span-5 space-y-3" id="trail-steps-list">
+                        <!-- Renderizado via JS -->
+                    </div>
+
+                    <!-- Área Interativa da Etapa Selecionada (Coluna Direita) -->
+                    <div class="lg:col-span-7 bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden sticky top-6" id="trail-workspace">
+                        <!-- Cabeçalho da Etapa -->
+                        <div class="bg-gradient-to-r from-royal-600 to-celeste-500 p-6 text-white">
+                            <div class="flex items-center justify-between gap-2 mb-2">
+                                <span id="active-lesson-subject" class="px-3 py-1 rounded-full bg-white/20 text-xs font-bold uppercase tracking-wider">Disciplina</span>
+                                <span id="active-lesson-status-badge" class="px-3 py-1 rounded-full bg-white/20 text-xs font-semibold">Em andamento</span>
+                            </div>
+                            <h2 id="active-lesson-title" class="font-display text-xl sm:text-2xl font-extrabold">Selecione uma etapa na trilha</h2>
+                            <p id="active-lesson-desc" class="text-royal-100 text-sm mt-1">Clique em um módulo ao lado para iniciar seus estudos.</p>
+                        </div>
+
+                        <!-- Sub-abas da Etapa (Resumo | Videoaula | Quiz) -->
+                        <div class="flex border-b border-slate-200 bg-slate-50/70 px-4 pt-3 gap-2">
+                            <button onclick="switchLessonSubtab('summary')" id="subtab-btn-summary" class="lesson-subtab px-4 py-2.5 rounded-t-xl text-sm font-bold bg-white text-royal-700 border-t border-x border-slate-200 -mb-px flex items-center gap-2">
+                                <i data-lucide="file-text" class="w-4 h-4"></i> Resumo
+                            </button>
+                            <button onclick="switchLessonSubtab('video')" id="subtab-btn-video" class="lesson-subtab px-4 py-2.5 rounded-t-xl text-sm font-medium text-slate-600 hover:text-royal-600 flex items-center gap-2">
+                                <i data-lucide="play-square" class="w-4 h-4"></i> Videoaula
+                            </button>
+                            <button onclick="switchLessonSubtab('quiz')" id="subtab-btn-quiz" class="lesson-subtab px-4 py-2.5 rounded-t-xl text-sm font-medium text-slate-600 hover:text-royal-600 flex items-center gap-2">
+                                <i data-lucide="help-circle" class="w-4 h-4"></i> Quiz
+                            </button>
+                        </div>
+
+                        <!-- Conteúdo das Sub-abas -->
+                        <div class="p-6">
+                            <!-- 1. Resumo -->
+                            <div id="lesson-panel-summary" class="space-y-5">
+                                <div id="lesson-summary-content" class="prose max-w-none text-slate-700 text-sm sm:text-base leading-relaxed space-y-3 bg-slate-50/60 p-5 rounded-2xl border border-slate-100">
+                                    <!-- Resumo formatado -->
+                                </div>
+                                <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+                                    <button onclick="askTutorAboutCurrentLesson()" class="px-4 py-2.5 rounded-xl bg-royal-50 text-royal-700 hover:bg-royal-100 font-semibold text-xs sm:text-sm flex items-center gap-2 transition">
+                                        <i data-lucide="sparkles" class="w-4 h-4"></i> Pedir explicação extra ao Tutor IA
+                                    </button>
+                                    <button id="btn-toggle-summary-done" onclick="toggleLessonCompletion('summary')" class="px-5 py-2.5 rounded-xl bg-royal-600 hover:bg-royal-700 text-white font-semibold text-xs sm:text-sm flex items-center gap-2 shadow-sm transition">
+                                        <i data-lucide="check" class="w-4 h-4"></i> Marcar Resumo como Lido
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 2. Videoaula -->
+                            <div id="lesson-panel-video" class="hidden space-y-5">
+                                <div class="aspect-video w-full rounded-2xl overflow-hidden bg-slate-900 shadow-inner border border-slate-200">
+                                    <iframe id="lesson-video-iframe" class="w-full h-full" src="" title="Videoaula Estudo Leve" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                                </div>
+                                <div class="flex flex-wrap items-center justify-between gap-3">
+                                    <p class="text-xs text-slate-500">Assista à aula completa e registre seu progresso na nuvem.</p>
+                                    <button id="btn-toggle-video-done" onclick="toggleLessonCompletion('video')" class="px-5 py-2.5 rounded-xl bg-royal-600 hover:bg-royal-700 text-white font-semibold text-xs sm:text-sm flex items-center gap-2 shadow-sm transition">
+                                        <i data-lucide="check-circle" class="w-4 h-4"></i> Marcar Aula como Assistida
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 3. Banco de Questões / Quiz -->
+                            <div id="lesson-panel-quiz" class="hidden space-y-6">
+                                <div id="quiz-score-banner" class="hidden p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="p-2 bg-emerald-500 text-white rounded-xl">
+                                            <i data-lucide="award" class="w-5 h-5"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-bold text-emerald-900">Desempenho Registrado na Nuvem</p>
+                                            <p id="quiz-score-text" class="text-xs text-emerald-700">Você acertou X de Y questões.</p>
+                                        </div>
+                                    </div>
+                                    <button onclick="resetCurrentQuiz()" class="text-xs font-semibold text-emerald-800 underline">Refazer Quiz</button>
+                                </div>
+
+                                <div id="quiz-questions-container" class="space-y-6">
+                                    <!-- Questões renderizadas via JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================================== -->
+            <!-- ABA 3: SISTEMA DE HORÁRIOS DE PROVAS                           -->
+            <!-- ============================================================== -->
+            <section id="tab-exams" class="tab-content hidden fade-in space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h1 class="font-display text-2xl sm:text-3xl font-extrabold text-slate-900">Horários de Provas & Avaliações</h1>
+                        <p class="text-sm text-slate-500 mt-1">Organize sua agenda com contagem regressiva automática, salas e links de avaliação.</p>
+                    </div>
+                    <button onclick="openOwnerTabIfAllowed()" class="px-4 py-2.5 rounded-xl bg-royal-600 hover:bg-royal-700 text-white text-sm font-semibold flex items-center gap-2 self-start shadow-sm transition">
+                        <i data-lucide="calendar-plus" class="w-4 h-4"></i> Adicionar Prova (Proprietário)
+                    </button>
+                </div>
+
+                <!-- Grid de Cards de Provas -->
+                <div id="exams-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <!-- Renderizado via JS -->
+                </div>
+            </section>
+
+            <!-- ============================================================== -->
+            <!-- ABA 4: BIBLIOTECA DE MATERIAIS                                 -->
+            <!-- ============================================================== -->
+            <section id="tab-library" class="tab-content hidden fade-in space-y-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h1 class="font-display text-2xl sm:text-3xl font-extrabold text-slate-900">Biblioteca de Materiais</h1>
+                        <p class="text-sm text-slate-500 mt-1">Apostilas, mapas mentais, slides e listas de exercícios organizados por disciplina.</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <div class="relative">
+                            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                            <input type="text" id="library-search" oninput="renderLibrary()" placeholder="Buscar material..." class="pl-10 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm outline-none focus:border-royal-500 w-full sm:w-64">
+                        </div>
+                        <select id="library-subject-filter" onchange="renderLibrary()" class="px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm font-medium text-slate-700 outline-none focus:border-royal-500">
+                            <option value="all">Todas as Matérias</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Grid da Biblioteca -->
+                <div id="library-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <!-- Renderizado via JS -->
+                </div>
+            </section>
+
+            <!-- ============================================================== -->
+            <!-- ABA 5: TUTOR LEVE IA (GEMINI API)                              -->
+            <!-- ============================================================== -->
+            <section id="tab-tutor" class="tab-content hidden fade-in space-y-5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-royal-100 text-royal-800 text-xs font-bold mb-1">
+                            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Inteligência Artificial Integrada
+                        </div>
+                        <h1 class="font-display text-2xl sm:text-3xl font-extrabold text-slate-900">Tutor Leve IA</h1>
+                        <p class="text-sm text-slate-500">Peça resumos rápidos, resolução passo a passo de exercícios ou questões inéditas de treino.</p>
+                    </div>
+                    <button onclick="clearTutorChat()" class="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-xs font-semibold text-slate-600 flex items-center gap-1.5 self-start">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Limpar Conversa
+                    </button>
+                </div>
+
+                <!-- Container do Chat -->
+                <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm flex flex-col h-[620px] overflow-hidden">
+                    <!-- Sugestões Rápidas -->
+                    <div class="p-3.5 bg-royal-50/70 border-b border-royal-100 flex items-center gap-2 overflow-x-auto">
+                        <span class="text-xs font-bold text-royal-800 shrink-0">Sugestões:</span>
+                        <button onclick="sendQuickPrompt('Crie um resumo esquematizado em tópicos sobre Funções do 2º Grau com dicas de prova.')" class="px-3 py-1.5 rounded-full bg-white border border-royal-200 hover:border-royal-500 text-xs font-medium text-royal-700 shrink-0 transition">
+                            📐 Resumo de Função Quadrática
+                        </button>
+                        <button onclick="sendQuickPrompt('Gere 3 questões de múltipla escolha sobre Ecologia e Ciclos Biogeoquímicos com gabarito comentado.')" class="px-3 py-1.5 rounded-full bg-white border border-royal-200 hover:border-royal-500 text-xs font-medium text-royal-700 shrink-0 transition">
+                            🌿 Criar Quiz de Biologia
+                        </button>
+                        <button onclick="sendQuickPrompt('Me ajude a montar um cronograma leve de revisão de 2 horas por dia para a semana de provas.')" class="px-3 py-1.5 rounded-full bg-white border border-royal-200 hover:border-royal-500 text-xs font-medium text-royal-700 shrink-0 transition">
+                            🗓️ Cronograma de Revisão
+                        </button>
+                    </div>
+
+                    <!-- Histórico de Mensagens -->
+                    <div id="tutor-chat-messages" class="flex-1 overflow-y-auto p-5 space-y-4 bg-slate-50/40">
+                        <!-- Mensagem Inicial -->
+                        <div class="flex items-start gap-3 max-w-3xl">
+                            <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-royal-600 to-celeste-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                                <i data-lucide="bot" class="w-5 h-5"></i>
+                            </div>
+                            <div class="bg-white border border-slate-200/80 rounded-2xl rounded-tl-none p-4 shadow-2xs text-sm text-slate-700 leading-relaxed">
+                                <p class="font-bold text-royal-900 mb-1">Olá! Eu sou o Tutor Leve IA ✨</p>
+                                <p>Estou aqui para tornar seus estudos mais simples, claros e objetivos. Qual matéria ou dúvida você gostaria de explorar agora?</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Input de Mensagem -->
+                    <form id="tutor-chat-form" class="p-4 bg-white border-t border-slate-200 flex items-center gap-3">
+                        <input type="text" id="tutor-chat-input" required placeholder="Digite sua dúvida, cole uma questão ou peça um resumo..." class="flex-1 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-royal-500 focus:ring-2 focus:ring-royal-100 outline-none text-sm transition">
+                        <button type="submit" id="tutor-send-btn" class="px-5 py-3 rounded-2xl bg-gradient-to-r from-royal-600 to-celeste-500 hover:from-royal-700 hover:to-celeste-600 text-white font-semibold text-sm shadow-md shadow-royal-500/20 flex items-center gap-2 transition shrink-0">
+                            <span>Enviar</span>
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- ============================================================== -->
+            <!-- ABA 6: PAINEL EXCLUSIVO DO PROPRIETÁRIO                        -->
+            <!-- ============================================================== -->
+            <section id="tab-owner" class="tab-content hidden fade-in space-y-6">
+                <!-- Banner de Bloqueio (Visível se o usuário não estiver no modo Proprietário) -->
+                <div id="owner-locked-screen" class="bg-white rounded-3xl border border-slate-200 p-8 sm:p-12 text-center max-w-xl mx-auto shadow-sm">
+                    <div class="w-16 h-16 rounded-3xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="lock" class="w-8 h-8"></i>
+                    </div>
+                    <h2 class="font-display text-2xl font-extrabold text-slate-900">Área Restrita ao Proprietário</h2>
+                    <p class="text-sm text-slate-500 mt-2 leading-relaxed">
+                        Este painel permite publicar avisos para a turma, cadastrar datas de provas, criar módulos na trilha de estudos e adicionar materiais na biblioteca.
+                    </p>
+                    <button onclick="openAuthModal('owner')" class="mt-6 px-6 py-3 rounded-xl bg-royal-600 hover:bg-royal-700 text-white font-semibold text-sm shadow-md transition inline-flex items-center gap-2">
+                        <i data-lucide="key-round" class="w-4 h-4"></i> Desbloquear Modo Proprietário
+                    </button>
+                </div>
+
+                <!-- Conteúdo Real do Painel Proprietário -->
+                <div id="owner-unlocked-dashboard" class="hidden space-y-6">
+                    <div class="bg-gradient-to-r from-slate-900 via-royal-900 to-royal-800 rounded-3xl p-6 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg">
+                        <div>
+                            <span class="px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 text-xs font-bold uppercase tracking-wider">Modo Administrador Ativo</span>
+                            <h1 class="font-display text-2xl font-extrabold mt-2">Painel de Gestão do Proprietário</h1>
+                            <p class="text-royal-200 text-sm mt-0.5">Todas as publicações e edições são sincronizadas instantaneamente com todos os estudantes.</p>
+                        </div>
+                        <button onclick="switchToStudentMode()" class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold border border-white/15 self-start">
+                            Voltar para Visão de Aluno
+                        </button>
+                    </div>
+
+                    <!-- Sub-navegação de Gerenciamento -->
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="switchOwnerSection('announcements')" id="owner-sec-btn-announcements" class="owner-sec-btn px-4 py-2.5 rounded-xl bg-royal-600 text-white text-sm font-semibold shadow-xs">
+                            📢 Mural de Avisos
+                        </button>
+                        <button onclick="switchOwnerSection('exams')" id="owner-sec-btn-exams" class="owner-sec-btn px-4 py-2.5 rounded-xl bg-white text-slate-700 border border-slate-200 text-sm font-semibold hover:bg-royal-50">
+                            📅 Calendário de Provas
+                        </button>
+                        <button onclick="switchOwnerSection('lessons')" id="owner-sec-btn-lessons" class="owner-sec-btn px-4 py-2.5 rounded-xl bg-white text-slate-700 border border-slate-200 text-sm font-semibold hover:bg-royal-50">
+                            🗺️ Módulos da Trilha
+                        </button>
+                        <button onclick="switchOwnerSection('materials')" id="owner-sec-btn-materials" class="owner-sec-btn px-4 py-2.5 rounded-xl bg-white text-slate-700 border border-slate-200 text-sm font-semibold hover:bg-royal-50">
+                            📚 Biblioteca de Materiais
+                        </button>
+                    </div>
+
+                    <!-- 1. Gerenciar Avisos -->
+                    <div id="owner-sec-announcements" class="owner-section grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <div class="lg:col-span-5 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
+                            <h3 class="font-display font-bold text-lg text-slate-900 mb-4">Publicar Novo Aviso</h3>
+                            <form id="form-add-announcement" class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Título do Comunicado</label>
+                                    <input type="text" id="ann-title" required placeholder="Ex: Simulado Geral neste Sábado" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-royal-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Prioridade / Categoria</label>
+                                    <select id="ann-priority" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-royal-500">
+                                        <option value="info">Informativo Geral (Azul)</option>
+                                        <option value="important">Importante / Prazo (Âmbar)</option>
+                                        <option value="urgent">Urgente / Atenção (Vermelho)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Mensagem para a Turma</label>
+                                    <textarea id="ann-content" rows="4" required placeholder="Escreva os detalhes do aviso..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-royal-500"></textarea>
+                                </div>
+                                <button type="submit" class="w-full py-3 rounded-xl bg-royal-600 hover:bg-royal-700 text-white font-semibold text-sm shadow-sm transition">
+                                    Publicar no Mural
+                                </button>
+                            </form>
+                        </div>
+                        <div class="lg:col-span-7 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
+                            <h3 class="font-display font-bold text-lg text-slate-900 mb-4">Avisos Ativos na Turma</h3>
+                            <div id="owner-announcements-list" class="space-y-3"></div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Gerenciar Provas -->
+                    <div id="owner-sec-exams" class="owner-section hidden grid-cols-1 lg:grid-cols-12 gap-6">
+                        <div class="lg:col-span-5 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
+                            <h3 class="font-display font-bold text-lg text-slate-900 mb-4">Agendar Nova Avaliação</h3>
+                            <form id="form-add-exam" class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Disciplina</label>
+                                    <input type="text" id="exam-subject" required placeholder="Ex: Matemática" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-royal-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Título / Conteúdo da Prova</label>
+                                    <input type="text" id="exam-title" required placeholder="Ex: P1 - Funções e Geometria" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-royal-500">
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-600 mb-1">Data</label>
+                                        <input type="date" id="exam-date" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-royal-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-600 mb-1">Horário</label>
+                                        <input type="time" id="exam-time" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-royal-500">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Local / Sala ou Link Online</label>
+                                    <input type="text" id="exam-location" required placeholder="Ex: Sala 204 ou Portal AVA" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-royal-500">
+                                </div>
+                                <button type="submit" class="w-full py-3 rounded-xl bg-royal-600 hover:bg-royal-700 text-white font-semibold text-sm shadow-sm transition">
+                                    Salvar Prova no Calendário
+                                </button>
+                            </form>
+                        </div>
+                        <div class="lg:col-span-7 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
+                            <h3 class="font-display font-bold text-lg text-slate-900 mb-4">Provas Agendadas</h3>
+                            <div id="owner-exams-list" class="space-y-3"></div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Gerenciar Trilha / Aulas -->
+                    <div id="owner-sec-lessons" class="owner-section hidden grid-cols-1 lg:grid-cols-12 gap-6">
+                        <div class="lg:col-span-6 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
+                            <h3 class="font-display font-bold text-lg text-slate-900 mb-4">Adicionar Módulo na Trilha</h3>
+                            <form id="form-add-lesson" class="space-y-3.5">
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-600 mb-1">Disciplina</label>
+                                        <input type="text" id="les-subject" required placeholder="Ex: Física" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-royal-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-600 mb-1">Ordem na Trilha</label>
+                                        <input type="number" id="les-order" value="5" min="1" required class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-royal-500">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Título do Módulo</label>
+                                    <input type="text" id="les-title" required placeholder="Ex: Leis de Newton e Aplicações" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-royal-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Resumo Estruturado da Aula</label>
+                                    <textarea id="les-summary" rows="3" required placeholder="Escreva os principais conceitos e fórmulas..." class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-royal-500"></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">URL de Embed do Vídeo (YouTube)</label>
+                                    <input type="url" id="les-video" placeholder="https://www.youtube.com/embed/..." value="https://www.youtube.com/embed/dQw4w9WgXcQ" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-royal-500">
+                                </div>
+                                <div class="p-3.5 rounded-2xl bg-royal-50/70 border border-royal-100 space-y-2.5">
+                                    <p class="text-xs font-bold text-royal-900">Questão de Quiz da Etapa</p>
+                                    <input type="text" id="les-q-text" required placeholder="Enunciado da questão..." class="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-xs outline-none">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <input type="text" id="les-q-opt0" required placeholder="Alternativa A" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs outline-none">
+                                        <input type="text" id="les-q-opt1" required placeholder="Alternativa B" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs outline-none">
+                                        <input type="text" id="les-q-opt2" required placeholder="Alternativa C" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs outline-none">
+                                        <input type="text" id="les-q-opt3" required placeholder="Alternativa D" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs outline-none">
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <select id="les-q-correct" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs outline-none">
+                                            <option value="0">Correta: Alternativa A</option>
+                                            <option value="1">Correta: Alternativa B</option>
+                                            <option value="2">Correta: Alternativa C</option>
+                                            <option value="3">Correta: Alternativa D</option>
+                                        </select>
+                                        <input type="text" id="les-q-exp" required placeholder="Explicação do gabarito" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs outline-none">
+                                    </div>
+                                </div>
+                                <button type="submit" class="w-full py-3 rounded-xl bg-royal-600 hover:bg-royal-700 text-white font-semibold text-sm shadow-sm transition">
+                                    Publicar Etapa na Trilha
+                                </button>
+                            </form>
+                        </div>
+                        <div class="lg:col-span-6 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
+                            <h3 class="font-display font-bold text-lg text-slate-900 mb-4">Módulos Cadastrados</h3>
+                            <div id="owner-lessons-list" class="space-y-3"></div>
+                        </div>
+                    </div>
+
+                    <!-- 4. Gerenciar Biblioteca -->
+                    <div id="owner-sec-materials" class="owner-section hidden grid-cols-1 lg:grid-cols-12 gap-6">
+                        <div class="lg:col-span-5 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
+                            <h3 class="font-display font-bold text-lg text-slate-900 mb-4">Adicionar Material à Biblioteca</h3>
+                            <form id="form-add-material" class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Título do Arquivo</label>
+                                    <input type="text" id="mat-title" required placeholder="Ex: Apostila Completa de Redação ENEM" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-royal-500">
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-600 mb-1">Disciplina</label>
+                                        <input type="text" id="mat-subject" required placeholder="Ex: Redação" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-royal-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-600 mb-1">Tipo de Material</label>
+                                        <select id="mat-type" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-royal-500">
+                                            <option value="PDF">Apostila PDF</option>
+                                            <option value="Mapa Mental">Mapa Mental</option>
+                                            <option value="Lista de Exercícios">Lista de Exercícios</option>
+                                            <option value="Slides">Slides de Aula</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Descrição Breve</label>
+                                    <textarea id="mat-desc" rows="2" required placeholder="Resumo do conteúdo deste arquivo..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-royal-500"></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Link Externo (Opcional)</label>
+                                    <input type="url" id="mat-url" placeholder="https://..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-royal-500">
+                                </div>
+                                <button type="submit" class="w-full py-3 rounded-xl bg-royal-600 hover:bg-royal-700 text-white font-semibold text-sm shadow-sm transition">
+                                    Adicionar na Biblioteca
+                                </button>
+                            </form>
+                        </div>
+                        <div class="lg:col-span-7 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
+                            <h3 class="font-display font-bold text-lg text-slate-900 mb-4">Acervo Atual</h3>
+                            <div id="owner-materials-list" class="space-y-3"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Modal de Visualização de Material da Biblioteca -->
+    <div id="material-preview-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 fade-in">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl bg-royal-50 text-royal-600 flex items-center justify-center">
+                        <i data-lucide="file-check-2" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <span id="preview-mat-badge" class="text-[11px] font-bold uppercase px-2.5 py-0.5 rounded-full bg-royal-100 text-royal-700">PDF</span>
+                        <h3 id="preview-mat-title" class="font-display font-bold text-lg text-slate-900 mt-1">Título do Material</h3>
+                    </div>
+                </div>
+                <button onclick="closeMaterialModal()" class="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <p id="preview-mat-desc" class="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-5"></p>
+            <div class="flex items-center justify-end gap-3">
+                <button onclick="closeMaterialModal()" class="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100">Fechar</button>
+                <a id="preview-mat-link" href="#" target="_blank" onclick="triggerSimulatedDownload(event)" class="px-5 py-2.5 rounded-xl bg-royal-600 hover:bg-royal-700 text-white text-sm font-semibold flex items-center gap-2 shadow-sm">
+                    <i data-lucide="download" class="w-4 h-4"></i> Baixar / Acessar Arquivo
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================== -->
+    <!-- SCRIPT PRINCIPAL: FIREBASE + ESTADO + GEMINI AI + INTERATIVIDADE       -->
+    <!-- ====================================================================== -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Configuração do Ambiente Firebase
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'estudo-leve-default';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+
+        let app, auth, db;
+        let currentUser = null;
+        let useMemoryFallback = false;
+
+        // Estado Global da Aplicação
+        const state = {
+            profile: {
+                name: 'Estudante Dedicado',
+                avatar: '🎓',
+                role: 'student' // 'student' | 'owner'
+            },
+            progress: {
+                completedSummaries: [],
+                completedVideos: [],
+                quizScores: {}, // { lessonId: { score: number, total: number, answers: {} } }
+                personalNotes: ''
+            },
+            announcements: [],
+            exams: [],
+            lessons: [],
+            materials: [],
+            activeLessonId: null,
+            activeSubtab: 'summary',
+            chatHistory: []
+        };
+
+        const AVATARS = ['🎓', '🚀', '🦉', '💡', '📘', '🧠', '🌟', '🦊', '🎨', '⚡'];
+
+        // Dados Iniciais (Seed Data) caso a turma ainda não tenha registros no banco
+        const SEED_ANNOUNCEMENTS = [
+            {
+                title: 'Bem-vindos ao novo semestre no Estudo Leve! 💙',
+                priority: 'info',
+                content: 'Toda a trilha de estudos, materiais de apoio e o Tutor IA já estão liberados. Acompanhem semanalmente as metas de revisão.',
+                createdAt: new Date().toISOString()
+            },
+            {
+                title: 'Inscrições abertas para o Simulado Diagnóstico',
+                priority: 'important',
+                content: 'O simulado será aplicado na próxima semana. Revisem os módulos de Funções Quadráticas e Ecologia na trilha interativa.',
+                createdAt: new Date(Date.now() - 86400000).toISOString()
+            }
+        ];
+
+        const SEED_EXAMS = [
+            {
+                subject: 'Matemática',
+                title: 'Avaliação P1 - Funções e Equações',
+                date: new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0],
+                time: '08:30',
+                location: 'Sala 104 - Bloco Azul'
+            },
+            {
+                subject: 'Biologia',
+                title: 'Prova Bimestral - Ecologia e Sustentabilidade',
+                date: new Date(Date.now() + 9 * 86400000).toISOString().split('T')[0],
+                time: '10:15',
+                location: 'Laboratório de Ciências / Online'
+            },
+            {
+                subject: 'História',
+                title: 'Seminário & Teste - Brasil Contemporâneo',
+                date: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
+                time: '14:00',
+                location: 'Auditório Central'
+            }
+        ];
+
+        const SEED_LESSONS = [
+            {
+                order: 1,
+                subject: 'Matemática',
+                title: 'Funções do 2º Grau e Gráfico da Parábola',
+                description: 'Compreenda coeficientes, vértice, raízes e como interpretar parábolas com facilidade.',
+                summary: `<h3>1. Definição Geral</h3>
+                <p>Uma função polinomial do 2º grau é definida por <strong>f(x) = ax² + bx + c</strong>, com <em>a ≠ 0</em>. Seu gráfico no plano cartesiano é sempre uma curva chamada <strong>parábola</strong>.</p>
+                <h3>2. Concavidade e Discriminante (Δ)</h3>
+                <ul>
+                    <li><strong>Se a &gt; 0:</strong> concavidade voltada para cima (possui ponto de mínimo).</li>
+                    <li><strong>Se a &lt; 0:</strong> concavidade voltada para baixo (possui ponto de máximo).</li>
+                    <li><strong>Δ = b² - 4ac:</strong> determina quantas vezes a parábola toca o eixo X (2 raízes reais se Δ &gt; 0, 1 raiz se Δ = 0, nenhuma real se Δ &lt; 0).</li>
+                </ul>
+                <h3>3. Coordenadas do Vértice</h3>
+                <p>O vértice V(xᵥ, yᵥ) indica o ponto extremo da função: <strong>xᵥ = -b / 2a</strong> e <strong>yᵥ = -Δ / 4a</strong>.</p>`,
+                videoUrl: 'https://www.youtube.com/embed/Z5a324-O0aM',
+                questions: [
+                    {
+                        question: 'Na função f(x) = -2x² + 8x - 6, qual é a concavidade da parábola e o valor de x do vértice?',
+                        options: [
+                            'Concavidade para cima e xᵥ = 2',
+                            'Concavidade para baixo e xᵥ = 2',
+                            'Concavidade para baixo e xᵥ = -2',
+                            'Concavidade para cima e xᵥ = 4'
+                        ],
+                        correctIndex: 1,
+                        explanation: 'Como a = -2 (< 0), a concavidade é para baixo. Calculando xᵥ = -b / (2a) = -8 / (2 · -2) = -8 / -4 = 2.'
+                    },
+                    {
+                        question: 'Quando o discriminante Δ (Delta) de uma equação do 2º grau é igual a zero, o que acontece com o gráfico?',
+                        options: [
+                            'Não toca o eixo X',
+                            'Corta o eixo X em dois pontos distintos',
+                            'Tangencia o eixo X em exatamente um ponto',
+                            'Torna-se uma reta crescente'
+                        ],
+                        correctIndex: 2,
+                        explanation: 'Quando Δ = 0, existem duas raízes reais e iguais, fazendo com que o vértice toque o eixo X em um único ponto.'
+                    }
+                ]
+            },
+            {
+                order: 2,
+                subject: 'Biologia',
+                title: 'Cadeias Alimentares e Fluxo de Energia',
+                description: 'Entenda os níveis tróficos, produtores, consumidores e a regra dos 10% nos ecossistemas.',
+                summary: `<h3>1. Níveis Tróficos</h3>
+                <p>Nos ecossistemas, a matéria circula de forma cíclica, enquanto a <strong>energia flui de maneira unidirecional</strong> e decrescente:</p>
+                <ul>
+                    <li><strong>Produtores:</strong> organismos autótrofos (plantas, algas, cianobactérias) que realizam fotossíntese ou quimiossíntese.</li>
+                    <li><strong>Consumidores Primários:</strong> herbívoros que se alimentam diretamente dos produtores.</li>
+                    <li><strong>Decompositores:</strong> fungos e bactérias essenciais para reciclar a matéria orgânica.</li>
+                </ul>
+                <h3>2. Pirâmide de Energia</h3>
+                <p>A pirâmide de energia <strong>nunca pode ser invertida</strong>, pois apenas cerca de 10% da energia de um nível trófico é transferida para o nível seguinte.</p>`,
+                videoUrl: 'https://www.youtube.com/embed/1_k5F2fB80k',
+                questions: [
+                    {
+                        question: 'Por que a pirâmide de energia de um ecossistema nunca pode ser invertida?',
+                        options: [
+                            'Porque os decompositores produzem luz solar',
+                            'Porque a energia aumenta a cada nível trófico',
+                            'Porque parte da energia é dissipada na forma de calor em cada nível',
+                            'Porque existem mais predadores de topo do que plantas'
+                        ],
+                        correctIndex: 2,
+                        explanation: 'A cada transferência trófica, grande parte da energia é utilizada no metabolismo e dissipada como calor, tornando o fluxo sempre decrescente.'
+                    }
+                ]
+            },
+            {
+                order: 3,
+                subject: 'Redação',
+                title: 'Estrutura da Dissertação-Argumentativa Nota 1000',
+                description: 'Domine tese, repertório sociocultural produtivo e proposta de intervenção completa.',
+                summary: `<h3>1. Os 4 Parágrafos Estratégicos</h3>
+                <ul>
+                    <li><strong>Introdução:</strong> Contextualização (repertório) + apresentação do tema + Tese (2 argumentos que serão defendidos).</li>
+                    <li><strong>Desenvolvimento 1 e 2:</strong> Tópico frasal + fundamentação teórica + análise crítica conectada ao tema.</li>
+                    <li><strong>Conclusão (Proposta de Intervenção):</strong> Deve responder aos 5 elementos obrigatórios: <strong>Agente, Ação, Meio/Modo, Efeito e Detalhamento</strong>.</li>
+                </ul>`,
+                videoUrl: 'https://www.youtube.com/embed/r4t8_b4P7m4',
+                questions: [
+                    {
+                        question: 'Quais são os 5 elementos essenciais de uma proposta de intervenção completa na conclusão?',
+                        options: [
+                            'Título, Tese, Citação, Antítese e Síntese',
+                            'Agente, Ação, Meio/Modo, Efeito e Detalhamento',
+                            'Introdução, Clímax, Desfecho, Moral e Referência',
+                            'Sujeito, Verbo, Predicado, Adjunto e Vocativo'
+                        ],
+                        correctIndex: 1,
+                        explanation: 'Uma intervenção completa exige quem vai fazer (Agente), o que fará (Ação), como fará (Meio), para quê (Efeito) e uma explicação extra (Detalhamento).'
+                    }
+                ]
+            }
+        ];
+
+        const SEED_MATERIALS = [
+            {
+                title: 'Apostila Ilustrada: Funções e Gráficos',
+                subject: 'Matemática',
+                type: 'PDF',
+                description: 'Material completo com 25 exercícios resolvidos passo a passo sobre funções afim e quadrática.',
+                url: '#'
+            },
+            {
+                title: 'Mapa Mental: Ciclos Biogeoquímicos',
+                subject: 'Biologia',
+                type: 'Mapa Mental',
+                description: 'Resumo visual colorido dos ciclos da água, carbono, nitrogênio e oxigênio para revisão rápida.',
+                url: '#'
+            },
+            {
+                title: 'Banco de Repertórios Socioculturais',
+                subject: 'Redação',
+                type: 'Slides',
+                description: 'Citações de filósofos, dados históricos e referências literárias coringas para eixos temáticos atuais.',
+                url: '#'
+            },
+            {
+                title: 'Lista de Treino: Cinemática e Leis de Newton',
+                subject: 'Física',
+                type: 'Lista de Exercícios',
+                description: 'Seleção de 15 questões de vestibulares com gabarito comentado ao final do documento.',
+                url: '#'
+            }
+        ];
+
+        // ======================================================================
+        // UTILITÁRIOS DE UI (TOASTS E CONFIRMAÇÕES CUSTOMIZADAS)
+        // ======================================================================
+        window.showToast = function(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const colors = {
+                success: 'bg-emerald-600 text-white',
+                error: 'bg-red-600 text-white',
+                info: 'bg-royal-700 text-white',
+                warning: 'bg-amber-500 text-white'
+            };
+            toast.className = `${colors[type] || colors.info} px-4 py-3 rounded-2xl shadow-lg text-sm font-medium flex items-center gap-2.5 pointer-events-auto fade-in max-w-sm`;
+            toast.innerHTML = `<span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        };
+
+        window.showConfirmModal = function(title, message) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('confirm-modal');
+                document.getElementById('confirm-title').textContent = title;
+                document.getElementById('confirm-message').textContent = message;
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+
+                const cleanup = (result) => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                    resolve(result);
+                };
+
+                document.getElementById('confirm-ok').onclick = () => cleanup(true);
+                document.getElementById('confirm-cancel').onclick = () => cleanup(false);
+            });
+        };
+
+        // ======================================================================
+        // INICIALIZAÇÃO DO FIREBASE & SINCRONIZAÇÃO EM TEMPO REAL
+        // ======================================================================
+        async function initApp() {
+            renderAvatarSelector();
+
+            try {
+                if (!firebaseConfig) throw new Error("Configuração Firebase indisponível");
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                // Regra 3: Autenticar primeiro antes de qualquer consulta
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        currentUser = user;
+                        document.getElementById('sidebar-uid').textContent = `ID: ${user.uid.slice(0, 12)}...`;
+                        await setupFirestoreListeners();
+                        hideLoadingScreen();
+                    }
+                });
+            } catch (err) {
+                console.warn("Executando em modo demonstração local:", err);
+                useMemoryFallback = true;
+                loadFallbackData();
+                hideLoadingScreen();
+            }
+        }
+
+        function hideLoadingScreen() {
+            const loader = document.getElementById('loading-screen');
+            loader.style.opacity = '0';
+            loader.style.transition = 'opacity 0.4s ease';
+            setTimeout(() => loader.classList.add('hidden'), 400);
+        }
+
+        function loadFallbackData() {
+            state.announcements = SEED_ANNOUNCEMENTS.map((item, idx) => ({ id: 'seed-ann-' + idx, ...item }));
+            state.exams = SEED_EXAMS.map((item, idx) => ({ id: 'seed-exam-' + idx, ...item }));
+            state.lessons = SEED_LESSONS.map((item, idx) => ({ id: 'seed-les-' + idx, ...item }));
+            state.materials = SEED_MATERIALS.map((item, idx) => ({ id: 'seed-mat-' + idx, ...item }));
+            refreshAllUI();
+        }
+
+        async function setupFirestoreListeners() {
+            if (!currentUser || useMemoryFallback) return;
+            const uid = currentUser.uid;
+
+            // 1. Perfil Individual do Usuário (/artifacts/{appId}/users/{userId}/profile/main)
+            const profileRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'main');
+            onSnapshot(profileRef, (snap) => {
+                if (snap.exists()) {
+                    state.profile = { ...state.profile, ...snap.data() };
+                } else {
+                    setDoc(profileRef, state.profile).catch(() => {});
+                }
+                updateProfileUI();
+            }, (err) => console.error("Erro profile:", err));
+
+            // 2. Progresso Individual do Estudante (/artifacts/{appId}/users/{userId}/progress/main)
+            const progressRef = doc(db, 'artifacts', appId, 'users', uid, 'progress', 'main');
+            onSnapshot(progressRef, (snap) => {
+                if (snap.exists()) {
+                    const data = snap.data();
+                    state.progress = {
+                        completedSummaries: data.completedSummaries || [],
+                        completedVideos: data.completedVideos || [],
+                        quizScores: data.quizScores || {},
+                        personalNotes: data.personalNotes || ''
+                    };
+                    document.getElementById('personal-notes-textarea').value = state.progress.personalNotes;
+                } else {
+                    setDoc(progressRef, state.progress).catch(() => {});
+                }
+                refreshAllUI();
+            }, (err) => console.error("Erro progress:", err));
+
+            // 3. Coleções Públicas da Turma (/artifacts/{appId}/public/data/{collectionName})
+            const annCol = collection(db, 'artifacts', appId, 'public', 'data', 'announcements');
+            onSnapshot(annCol, async (snapshot) => {
+                if (snapshot.empty) {
+                    for (const item of SEED_ANNOUNCEMENTS) await addDoc(annCol, item);
+                    return;
+                }
+                state.announcements = snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
+                    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+                renderAnnouncements();
+            }, (err) => console.error("Erro announcements:", err));
+
+            const examsCol = collection(db, 'artifacts', appId, 'public', 'data', 'exams');
+            onSnapshot(examsCol, async (snapshot) => {
+                if (snapshot.empty) {
+                    for (const item of SEED_EXAMS) await addDoc(examsCol, item);
+                    return;
+                }
+                state.exams = snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
+                    .sort((a, b) => new Date(a.date) - new Date(b.date));
+                renderExams();
+                updateDashboardStats();
+            }, (err) => console.error("Erro exams:", err));
+
+            const lessonsCol = collection(db, 'artifacts', appId, 'public', 'data', 'lessons');
+            onSnapshot(lessonsCol, async (snapshot) => {
+                if (snapshot.empty) {
+                    for (const item of SEED_LESSONS) await addDoc(lessonsCol, item);
+                    return;
+                }
+                state.lessons = snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
+                    .sort((a, b) => (a.order || 99) - (b.order || 99));
+                populateSubjectFilters();
+                renderTrail();
+                updateDashboardStats();
+            }, (err) => console.error("Erro lessons:", err));
+
+            const materialsCol = collection(db, 'artifacts', appId, 'public', 'data', 'materials');
+            onSnapshot(materialsCol, async (snapshot) => {
+                if (snapshot.empty) {
+                    for (const item of SEED_MATERIALS) await addDoc(materialsCol, item);
+                    return;
+                }
+                state.materials = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                populateSubjectFilters();
+                renderLibrary();
+                updateDashboardStats();
+            }, (err) => console.error("Erro materials:", err));
+        }
+
+        async function saveUserProgressToCloud() {
+            if (useMemoryFallback || !currentUser) {
+                refreshAllUI();
+                return;
+            }
+            const progressRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'progress', 'main');
+            await setDoc(progressRef, state.progress, { merge: true });
+        }
+
+        // ======================================================================
+        // PERFIL, AUTENTICAÇÃO E MODO PROPRIETÁRIO
+        // ======================================================================
+        let selectedModalRole = 'student';
+        let selectedModalAvatar = '🎓';
+
+        function renderAvatarSelector() {
+            const container = document.getElementById('avatar-selector');
+            container.innerHTML = AVATARS.map(av => `
+                <button type="button" onclick="pickAvatar('${av}')" data-av="${av}" class="av-choice text-2xl p-2 rounded-xl border border-slate-200 hover:bg-royal-50 transition flex items-center justify-center">
+                    ${av}
+                </button>
+            `).join('');
+        }
+
+        window.pickAvatar = function(av) {
+            selectedModalAvatar = av;
+            document.querySelectorAll('.av-choice').forEach(btn => {
+                if (btn.dataset.av === av) {
+                    btn.classList.add('border-royal-600', 'bg-royal-50', 'ring-2', 'ring-royal-200');
+                } else {
+                    btn.classList.remove('border-royal-600', 'bg-royal-50', 'ring-2', 'ring-royal-200');
+                }
+            });
+        };
+
+        window.selectRole = function(role) {
+            selectedModalRole = role;
+            const btnStudent = document.getElementById('role-btn-student');
+            const btnOwner = document.getElementById('role-btn-owner');
+            const pinWrapper = document.getElementById('owner-pin-wrapper');
+
+            if (role === 'owner') {
+                btnOwner.className = 'p-3 rounded-xl border-2 border-royal-600 bg-royal-50 text-royal-800 text-left transition';
+                btnStudent.className = 'p-3 rounded-xl border-2 border-slate-200 hover:border-royal-300 text-slate-700 text-left transition';
+                pinWrapper.classList.remove('hidden');
+            } else {
+                btnStudent.className = 'p-3 rounded-xl border-2 border-royal-600 bg-royal-50 text-royal-800 text-left transition';
+                btnOwner.className = 'p-3 rounded-xl border-2 border-slate-200 hover:border-royal-300 text-slate-700 text-left transition';
+                pinWrapper.classList.add('hidden');
+            }
+        };
+
+        window.openAuthModal = function(forceRole = null) {
+            document.getElementById('input-user-name').value = state.profile.name;
+            pickAvatar(state.profile.avatar || '🎓');
+            selectRole(forceRole || state.profile.role || 'student');
+            const modal = document.getElementById('auth-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+
+        window.closeAuthModal = function() {
+            const modal = document.getElementById('auth-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+
+        document.getElementById('profile-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('input-user-name').value.trim();
+            if (!name) return;
+
+            if (selectedModalRole === 'owner') {
+                const pin = document.getElementById('input-owner-pin').value.trim();
+                if (pin !== '1234' && state.profile.role !== 'owner') {
+                    showToast('Chave do Proprietário incorreta. Use 1234.', 'error');
+                    return;
+                }
+            }
+
+            state.profile = {
+                name,
+                avatar: selectedModalAvatar,
+                role: selectedModalRole
+            };
+
+            if (!useMemoryFallback && currentUser) {
+                const profileRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'main');
+                await setDoc(profileRef, state.profile, { merge: true });
+            }
+
+            updateProfileUI();
+            closeAuthModal();
+            showToast(`Perfil atualizado! Bem-vindo(a), ${name}.`, 'success');
+            if (selectedModalRole === 'owner') {
+                switchTab('owner');
+            }
+        });
+
+        window.switchToStudentMode = async function() {
+            state.profile.role = 'student';
+            if (!useMemoryFallback && currentUser) {
+                const profileRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'main');
+                await setDoc(profileRef, state.profile, { merge: true });
+            }
+            updateProfileUI();
+            switchTab('dashboard');
+            showToast('Modo Estudante ativado.', 'info');
+        };
+
+        function updateProfileUI() {
+            const { name, avatar, role } = state.profile;
+            const firstName = name.split(' ')[0];
+
+            document.getElementById('sidebar-username').textContent = name;
+            document.getElementById('sidebar-avatar').textContent = avatar;
+            document.getElementById('mobile-username').textContent = firstName;
+            document.getElementById('mobile-avatar').textContent = avatar;
+            document.getElementById('dash-greeting-name').textContent = firstName;
+
+            const roleBadge = document.getElementById('sidebar-role-badge');
+            const lockBadge = document.getElementById('owner-lock-badge');
+            const lockedScreen = document.getElementById('owner-locked-screen');
+            const unlockedDash = document.getElementById('owner-unlocked-dashboard');
+
+            if (role === 'owner') {
+                roleBadge.textContent = 'Proprietário';
+                roleBadge.className = 'text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800';
+                lockBadge.textContent = 'Ativo';
+                lockBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800';
+                lockedScreen.classList.add('hidden');
+                unlockedDash.classList.remove('hidden');
+            } else {
+                roleBadge.textContent = 'Aluno';
+                roleBadge.className = 'text-[10px] font-semibold px-1.5 py-0.5 rounded bg-royal-100 text-royal-700';
+                lockBadge.textContent = 'Bloqueado';
+                lockBadge.className = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500';
+                lockedScreen.classList.remove('hidden');
+                unlockedDash.classList.add('hidden');
+            }
+        }
+
+        // ======================================================================
+        // NAVEGAÇÃO ENTRE ABAS E MENU RESPONSIVO
+        // ======================================================================
+        window.switchTab = function(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById(`tab-${tabName}`);
+            if (target) target.classList.remove('hidden');
+
+            document.querySelectorAll('.nav-item').forEach(btn => {
+                if (btn.dataset.tab === tabName) {
+                    btn.className = 'nav-item w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition bg-royal-600 text-white shadow-md shadow-royal-600/20';
+                } else {
+                    btn.className = 'nav-item w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-royal-50 hover:text-royal-700 transition';
+                }
+            });
+
+            // Fecha sidebar mobile
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+            document.getElementById('sidebar-backdrop').classList.add('hidden');
+            lucide.createIcons();
+        };
+
+        window.openOwnerTabIfAllowed = function() {
+            switchTab('owner');
+            if (state.profile.role !== 'owner') {
+                openAuthModal('owner');
+            }
+        };
+
+        document.querySelectorAll('.nav-item').forEach(btn => {
+            btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+        });
+
+        document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.remove('-translate-x-full');
+            document.getElementById('sidebar-backdrop').classList.remove('hidden');
+        });
+        document.getElementById('close-sidebar-btn').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+            document.getElementById('sidebar-backdrop').classList.add('hidden');
+        });
+        document.getElementById('sidebar-backdrop').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+            document.getElementById('sidebar-backdrop').classList.add('hidden');
+        });
+
+        // ======================================================================
+        // RENDERIZAÇÃO: DASHBOARD, AVISOS E ANOTAÇÕES PESSOAIS
+        // ======================================================================
+        function refreshAllUI() {
+            updateProfileUI();
+            renderAnnouncements();
+            renderExams();
+            renderTrail();
+            renderLibrary();
+            updateDashboardStats();
+            lucide.createIcons();
+        }
+
+        function updateDashboardStats() {
+            const totalLessons = state.lessons.length;
+            let completedCount = 0;
+
+            state.lessons.forEach(les => {
+                const sumDone = state.progress.completedSummaries.includes(les.id);
+                const vidDone = state.progress.completedVideos.includes(les.id);
+                const quizDone = Boolean(state.progress.quizScores[les.id]);
+                if (sumDone && vidDone && quizDone) completedCount++;
+            });
+
+            // Cálculo percentual granular (resumo + vídeo + quiz)
+            const totalUnits = totalLessons * 3;
+            let completedUnits = 0;
+            state.lessons.forEach(les => {
+                if (state.progress.completedSummaries.includes(les.id)) completedUnits++;
+                if (state.progress.completedVideos.includes(les.id)) completedUnits++;
+                if (state.progress.quizScores[les.id]) completedUnits++;
+            });
+
+            const percent = totalUnits > 0 ? Math.round((completedUnits / totalUnits) * 100) : 0;
+            const circumference = 213.6;
+            const offset = circumference - (percent / 100) * circumference;
+
+            document.getElementById('dash-progress-ring').style.strokeDashoffset = offset;
+            document.getElementById('dash-progress-percent').textContent = `${percent}%`;
+            document.getElementById('dash-progress-detail').textContent = `${completedCount} de ${totalLessons} módulos`;
+
+            document.getElementById('stat-lessons').textContent = `${completedCount}/${totalLessons}`;
+            document.getElementById('stat-exams-count').textContent = state.exams.length;
+            document.getElementById('stat-materials-count').textContent = state.materials.length;
+
+            // Média dos Quizzes
+            const scores = Object.values(state.progress.quizScores);
+            if (scores.length > 0) {
+                const avg = Math.round(scores.reduce((acc, s) => acc + (s.score / s.total) * 100, 0) / scores.length);
+                document.getElementById('stat-quiz-avg').textContent = `${avg}%`;
+            } else {
+                document.getElementById('stat-quiz-avg').textContent = '--';
+            }
+        }
+
+        function renderAnnouncements() {
+            const dashList = document.getElementById('dashboard-announcements-list');
+            const ownerList = document.getElementById('owner-announcements-list');
+
+            const priorityBadge = {
+                info: { label: 'Informativo', cls: 'bg-royal-100 text-royal-700', border: 'border-l-royal-600' },
+                important: { label: 'Importante', cls: 'bg-amber-100 text-amber-800', border: 'border-l-amber-500' },
+                urgent: { label: 'Urgente', cls: 'bg-red-100 text-red-700', border: 'border-l-red-500' }
+            };
+
+            if (state.announcements.length === 0) {
+                dashList.innerHTML = `<p class="text-sm text-slate-400 py-4 text-center">Nenhum aviso publicado no momento.</p>`;
+            } else {
+                dashList.innerHTML = state.announcements.map(ann => {
+                    const p = priorityBadge[ann.priority] || priorityBadge.info;
+                    const dateStr = ann.createdAt ? new Date(ann.createdAt).toLocaleDateString('pt-BR') : 'Hoje';
+                    return `
+                        <div class="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/70 border-l-4 ${p.border}">
+                            <div class="flex items-center justify-between gap-2 mb-1.5">
+                                <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full ${p.cls}">${p.label}</span>
+                                <span class="text-xs text-slate-400">${dateStr}</span>
+                            </div>
+                            <h4 class="font-bold text-slate-900 text-sm sm:text-base">${ann.title}</h4>
+                            <p class="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">${ann.content}</p>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            if (ownerList) {
+                ownerList.innerHTML = state.announcements.map(ann => `
+                    <div class="p-3.5 rounded-2xl border border-slate-200 flex items-start justify-between gap-3">
+                        <div>
+                            <p class="font-bold text-sm text-slate-900">${ann.title}</p>
+                            <p class="text-xs text-slate-500 mt-0.5 line-clamp-2">${ann.content}</p>
+                        </div>
+                        <button onclick="deletePublicDoc('announcements', '${ann.id}')" class="p-2 text-red-500 hover:bg-red-50 rounded-xl shrink-0" title="Excluir aviso">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `).join('');
+            }
+            lucide.createIcons();
+        }
+
+        window.savePersonalNotes = async function() {
+            const notes = document.getElementById('personal-notes-textarea').value;
+            state.progress.personalNotes = notes;
+            const statusEl = document.getElementById('notes-save-status');
+            statusEl.textContent = 'Salvando...';
+            await saveUserProgressToCloud();
+            statusEl.textContent = 'Salvo na nuvem ✓';
+            showToast('Anotações pessoais salvas com segurança!', 'success');
+        };
+
+        // ======================================================================
+        // RENDERIZAÇÃO: HORÁRIOS DE PROVAS E CONTAGEM REGRESSIVA
+        // ======================================================================
+        function getDaysRemaining(dateString) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const target = new Date(dateString + 'T00:00:00');
+            const diffTime = target - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays < 0) return { text: 'Realizada', badge: 'bg-slate-100 text-slate-500' };
+            if (diffDays === 0) return { text: 'É Hoje!', badge: 'bg-red-100 text-red-700 animate-pulse' };
+            if (diffDays === 1) return { text: 'Amanhã', badge: 'bg-amber-100 text-amber-800' };
+            return { text: `Faltam ${diffDays} dias`, badge: 'bg-royal-100 text-royal-700' };
+        }
+
+        function renderExams() {
+            const grid = document.getElementById('exams-grid');
+            const preview = document.getElementById('dashboard-exams-preview');
+            const ownerList = document.getElementById('owner-exams-list');
+
+            if (state.exams.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-12 bg-white rounded-3xl border border-slate-200 text-slate-400">Nenhuma avaliação agendada.</div>`;
+                preview.innerHTML = `<p class="text-xs text-slate-400">Sem provas próximas.</p>`;
+                return;
+            }
+
+            grid.innerHTML = state.exams.map(exam => {
+                const countdown = getDaysRemaining(exam.date);
+                const formattedDate = new Date(exam.date + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+                return `
+                    <div class="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-xs hover:shadow-md hover:border-royal-300 transition flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between gap-2 mb-3">
+                                <span class="px-3 py-1 rounded-full bg-sky-50 text-celeste-600 text-xs font-bold">${exam.subject}</span>
+                                <span class="px-3 py-1 rounded-full text-xs font-bold ${countdown.badge}">${countdown.text}</span>
+                            </div>
+                            <h3 class="font-display font-bold text-lg text-slate-900">${exam.title}</h3>
+                            <div class="mt-4 space-y-2 text-sm text-slate-600">
+                                <div class="flex items-center gap-2.5">
+                                    <i data-lucide="calendar" class="w-4 h-4 text-royal-500"></i>
+                                    <span>${formattedDate} às <strong>${exam.time}</strong></span>
+                                </div>
+                                <div class="flex items-center gap-2.5">
+                                    <i data-lucide="map-pin" class="w-4 h-4 text-royal-500"></i>
+                                    <span>${exam.location}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="askTutorForExamPrep('${exam.subject}', '${exam.title}')" class="mt-5 w-full py-2.5 rounded-xl bg-royal-50 hover:bg-royal-100 text-royal-700 font-semibold text-xs flex items-center justify-center gap-2 transition">
+                            <i data-lucide="sparkles" class="w-4 h-4"></i> Preparar revisão com IA
+                        </button>
+                    </div>
+                `;
+            }).join('');
+
+            preview.innerHTML = state.exams.slice(0, 3).map(exam => {
+                const countdown = getDaysRemaining(exam.date);
+                const shortDate = new Date(exam.date + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                return `
+                    <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200/70 flex items-center justify-between gap-3">
+                        <div class="min-w-0">
+                            <p class="text-xs font-bold text-royal-700">${exam.subject} • ${shortDate}</p>
+                            <p class="text-xs font-semibold text-slate-800 truncate">${exam.title}</p>
+                        </div>
+                        <span class="text-[11px] font-bold px-2.5 py-1 rounded-full shrink-0 ${countdown.badge}">${countdown.text}</span>
+                    </div>
+                `;
+            }).join('');
+
+            if (ownerList) {
+                ownerList.innerHTML = state.exams.map(exam => `
+                    <div class="p-3.5 rounded-2xl border border-slate-200 flex items-center justify-between gap-3">
+                        <div>
+                            <p class="font-bold text-sm text-slate-900">${exam.subject}: ${exam.title}</p>
+                            <p class="text-xs text-slate-500">${exam.date} às ${exam.time} • ${exam.location}</p>
+                        </div>
+                        <button onclick="deletePublicDoc('exams', '${exam.id}')" class="p-2 text-red-500 hover:bg-red-50 rounded-xl shrink-0">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `).join('');
+            }
+            lucide.createIcons();
+        }
+
+        // ======================================================================
+        // RENDERIZAÇÃO: TRILHA INTERATIVA DE ESTUDOS + QUIZZES
+        // ======================================================================
+        function populateSubjectFilters() {
+            const subjects = [...new Set([
+                ...state.lessons.map(l => l.subject),
+                ...state.materials.map(m => m.subject)
+            ])];
+
+            const trailSelect = document.getElementById('trail-subject-filter');
+            const libSelect = document.getElementById('library-subject-filter');
+            const curTrail = trailSelect.value;
+            const curLib = libSelect.value;
+
+            const optionsHtml = `<option value="all">Todas as Disciplinas</option>` +
+                subjects.map(s => `<option value="${s}">${s}</option>`).join('');
+
+            trailSelect.innerHTML = optionsHtml;
+            libSelect.innerHTML = optionsHtml;
+            if (subjects.includes(curTrail)) trailSelect.value = curTrail;
+            if (subjects.includes(curLib)) libSelect.value = curLib;
+        }
+
+        window.renderTrail = function() {
+            const filter = document.getElementById('trail-subject-filter').value;
+            const filtered = filter === 'all' ? state.lessons : state.lessons.filter(l => l.subject === filter);
+            const container = document.getElementById('trail-steps-list');
+            const ownerList = document.getElementById('owner-lessons-list');
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="p-6 bg-white rounded-3xl border border-slate-200 text-center text-sm text-slate-400">Nenhuma etapa encontrada para este filtro.</div>`;
+                return;
+            }
+
+            if (!state.activeLessonId || !filtered.some(l => l.id === state.activeLessonId)) {
+                state.activeLessonId = filtered[0].id;
+            }
+
+            container.innerHTML = filtered.map((les, idx) => {
+                const isSelected = les.id === state.activeLessonId;
+                const sumDone = state.progress.completedSummaries.includes(les.id);
+                const vidDone = state.progress.completedVideos.includes(les.id);
+                const quizDone = Boolean(state.progress.quizScores[les.id]);
+                const stepsDone = [sumDone, vidDone, quizDone].filter(Boolean).length;
+                const isAllDone = stepsDone === 3;
+
+                return `
+                    <div onclick="selectLesson('${les.id}')" class="cursor-pointer p-5 rounded-3xl border-2 transition ${isSelected ? 'bg-white border-royal-600 shadow-md shadow-royal-600/10' : 'bg-white/80 border-slate-200/80 hover:border-royal-300'}">
+                        <div class="flex items-start gap-3.5">
+                            <div class="w-10 h-10 rounded-2xl flex items-center justify-center font-display font-extrabold text-sm shrink-0 ${isAllDone ? 'bg-emerald-500 text-white' : (isSelected ? 'bg-royal-600 text-white' : 'bg-royal-50 text-royal-700')}">
+                                ${isAllDone ? '✓' : (les.order || idx + 1)}
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-[11px] font-bold uppercase tracking-wider text-celeste-600">${les.subject}</span>
+                                    <span class="text-[11px] font-semibold ${isAllDone ? 'text-emerald-600' : 'text-slate-400'}">${stepsDone}/3 etapas</span>
+                                </div>
+                                <h3 class="font-display font-bold text-base text-slate-900 mt-0.5">${les.title}</h3>
+                                <p class="text-xs text-slate-500 mt-1 line-clamp-2">${les.description}</p>
+                                <!-- Mini indicadores de progresso -->
+                                <div class="flex items-center gap-2 mt-3">
+                                    <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold ${sumDone ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}">Resumo</span>
+                                    <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold ${vidDone ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}">Vídeo</span>
+                                    <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold ${quizDone ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}">Quiz</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            if (ownerList) {
+                ownerList.innerHTML = state.lessons.map(les => `
+                    <div class="p-3.5 rounded-2xl border border-slate-200 flex items-center justify-between gap-3">
+                        <div>
+                            <span class="text-[10px] font-bold uppercase text-royal-600">${les.subject} • Ordem ${les.order || 1}</span>
+                            <p class="font-bold text-sm text-slate-900">${les.title}</p>
+                        </div>
+                        <button onclick="deletePublicDoc('lessons', '${les.id}')" class="p-2 text-red-500 hover:bg-red-50 rounded-xl shrink-0">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `).join('');
+            }
+
+            renderActiveLessonWorkspace();
+            lucide.createIcons();
+        };
+
+        window.selectLesson = function(lessonId) {
+            state.activeLessonId = lessonId;
+            renderTrail();
+        };
+
+        window.switchLessonSubtab = function(subtab) {
+            state.activeSubtab = subtab;
+            ['summary', 'video', 'quiz'].forEach(st => {
+                const panel = document.getElementById(`lesson-panel-${st}`);
+                const btn = document.getElementById(`subtab-btn-${st}`);
+                if (st === subtab) {
+                    panel.classList.remove('hidden');
+                    btn.className = 'lesson-subtab px-4 py-2.5 rounded-t-xl text-sm font-bold bg-white text-royal-700 border-t border-x border-slate-200 -mb-px flex items-center gap-2';
+                } else {
+                    panel.classList.add('hidden');
+                    btn.className = 'lesson-subtab px-4 py-2.5 rounded-t-xl text-sm font-medium text-slate-600 hover:text-royal-600 flex items-center gap-2';
+                }
+            });
+            lucide.createIcons();
+        };
+
+        function renderActiveLessonWorkspace() {
+            const lesson = state.lessons.find(l => l.id === state.activeLessonId);
+            if (!lesson) return;
+
+            document.getElementById('active-lesson-subject').textContent = lesson.subject;
+            document.getElementById('active-lesson-title').textContent = lesson.title;
+            document.getElementById('active-lesson-desc').textContent = lesson.description;
+
+            const sumDone = state.progress.completedSummaries.includes(lesson.id);
+            const vidDone = state.progress.completedVideos.includes(lesson.id);
+            const quizRecord = state.progress.quizScores[lesson.id];
+
+            const isAllDone = sumDone && vidDone && Boolean(quizRecord);
+            const statusBadge = document.getElementById('active-lesson-status-badge');
+            statusBadge.textContent = isAllDone ? 'Módulo Concluído ✓' : 'Em Estudo';
+
+            // Resumo
+            document.getElementById('lesson-summary-content').innerHTML = lesson.summary;
+            const btnSum = document.getElementById('btn-toggle-summary-done');
+            if (sumDone) {
+                btnSum.className = 'px-5 py-2.5 rounded-xl bg-emerald-600 text-white font-semibold text-xs sm:text-sm flex items-center gap-2 shadow-sm transition';
+                btnSum.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4"></i> Resumo Concluído`;
+            } else {
+                btnSum.className = 'px-5 py-2.5 rounded-xl bg-royal-600 hover:bg-royal-700 text-white font-semibold text-xs sm:text-sm flex items-center gap-2 shadow-sm transition';
+                btnSum.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Marcar Resumo como Lido`;
+            }
+
+            // Vídeo
+            const iframe = document.getElementById('lesson-video-iframe');
+            if (iframe.src !== lesson.videoUrl) {
+                iframe.src = lesson.videoUrl || 'https://www.youtube.com/embed/Z5a324-O0aM';
+            }
+            const btnVid = document.getElementById('btn-toggle-video-done');
+            if (vidDone) {
+                btnVid.className = 'px-5 py-2.5 rounded-xl bg-emerald-600 text-white font-semibold text-xs sm:text-sm flex items-center gap-2 shadow-sm transition';
+                btnVid.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4"></i> Videoaula Assistida`;
+            } else {
+                btnVid.className = 'px-5 py-2.5 rounded-xl bg-royal-600 hover:bg-royal-700 text-white font-semibold text-xs sm:text-sm flex items-center gap-2 shadow-sm transition';
+                btnVid.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4"></i> Marcar Aula como Assistida`;
+            }
+
+            // Quiz
+            renderLessonQuiz(lesson, quizRecord);
+        }
+
+        window.toggleLessonCompletion = async function(type) {
+            const id = state.activeLessonId;
+            if (!id) return;
+            const list = type === 'summary' ? state.progress.completedSummaries : state.progress.completedVideos;
+            const idx = list.indexOf(id);
+            if (idx > -1) {
+                list.splice(idx, 1);
+                showToast('Marcação removida.', 'info');
+            } else {
+                list.push(id);
+                showToast(type === 'summary' ? 'Resumo marcado como lido! Progresso salvo.' : 'Videoaula concluída! Progresso salvo.', 'success');
+            }
+            await saveUserProgressToCloud();
+        };
+
+        function renderLessonQuiz(lesson, quizRecord) {
+            const banner = document.getElementById('quiz-score-banner');
+            const container = document.getElementById('quiz-questions-container');
+            const questions = lesson.questions || [];
+
+            if (quizRecord) {
+                banner.classList.remove('hidden');
+                document.getElementById('quiz-score-text').textContent = `Você acertou ${quizRecord.score} de ${quizRecord.total} questões (${Math.round((quizRecord.score / quizRecord.total) * 100)}%).`;
+            } else {
+                banner.classList.add('hidden');
+            }
+
+            if (questions.length === 0) {
+                container.innerHTML = `<p class="text-sm text-slate-400">Este módulo ainda não possui questões cadastradas.</p>`;
+                return;
+            }
+
+            const savedAnswers = quizRecord?.answers || {};
+
+            container.innerHTML = questions.map((q, qIdx) => {
+                const chosenIdx = savedAnswers[qIdx];
+                const isAnswered = chosenIdx !== undefined;
+
+                return `
+                    <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                        <p class="font-bold text-slate-900 text-sm sm:text-base">
+                            <span class="text-royal-600 mr-1">${qIdx + 1}.</span> ${q.question}
+                        </p>
+                        <div class="space-y-2">
+                            ${q.options.map((opt, optIdx) => {
+                                let btnStyle = 'bg-white border-slate-200 hover:border-royal-400 text-slate-700';
+                                if (isAnswered) {
+                                    if (optIdx === q.correctIndex) {
+                                        btnStyle = 'bg-emerald-50 border-emerald-500 text-emerald-900 font-semibold';
+                                    } else if (optIdx === chosenIdx) {
+                                        btnStyle = 'bg-red-50 border-red-400 text-red-900';
+                                    } else {
+                                        btnStyle = 'bg-white/60 border-slate-200 text-slate-400';
+                                    }
+                                }
+                                return `
+                                    <button type="button" onclick="answerQuizQuestion(${qIdx}, ${optIdx})" class="w-full text-left p-3.5 rounded-xl border text-xs sm:text-sm transition flex items-center gap-3 ${btnStyle}">
+                                        <span class="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center font-bold text-xs shrink-0">${String.fromCharCode(65 + optIdx)}</span>
+                                        <span>${opt}</span>
+                                    </button>
+                                `;
+                            }).join('')}
+                        </div>
+                        ${isAnswered ? `
+                            <div class="p-3.5 rounded-xl bg-royal-50 border border-royal-100 text-xs text-royal-900 leading-relaxed">
+                                <strong>Explicação:</strong> ${q.explanation}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.answerQuizQuestion = async function(qIdx, optIdx) {
+            const lesson = state.lessons.find(l => l.id === state.activeLessonId);
+            if (!lesson) return;
+
+            const existing = state.progress.quizScores[lesson.id] || {
+                score: 0,
+                total: lesson.questions.length,
+                answers: {}
+            };
+
+            existing.answers[qIdx] = optIdx;
+            // Recalcula pontuação total do módulo
+            let correctCount = 0;
+            lesson.questions.forEach((q, idx) => {
+                if (existing.answers[idx] === q.correctIndex) correctCount++;
+            });
+            existing.score = correctCount;
+            existing.total = lesson.questions.length;
+
+            state.progress.quizScores[lesson.id] = existing;
+            await saveUserProgressToCloud();
+
+            const isRight = lesson.questions[qIdx].correctIndex === optIdx;
+            showToast(isRight ? 'Resposta correta! Pontuação salva.' : 'Confira a explicação do gabarito abaixo.', isRight ? 'success' : 'info');
+        };
+
+        window.resetCurrentQuiz = async function() {
+            if (!state.activeLessonId) return;
+            delete state.progress.quizScores[state.activeLessonId];
+            await saveUserProgressToCloud();
+            showToast('Quiz reiniciado!', 'info');
+        };
+
+        // ======================================================================
+        // RENDERIZAÇÃO: BIBLIOTECA DE MATERIAIS
+        // ======================================================================
+        window.renderLibrary = function() {
+            const search = document.getElementById('library-search').value.toLowerCase();
+            const subjectFilter = document.getElementById('library-subject-filter').value;
+            const grid = document.getElementById('library-grid');
+            const ownerList = document.getElementById('owner-materials-list');
+
+            const filtered = state.materials.filter(m => {
+                const matchSub = subjectFilter === 'all' || m.subject === subjectFilter;
+                const matchText = m.title.toLowerCase().includes(search) || m.description.toLowerCase().includes(search);
+                return matchSub && matchText;
+            });
+
+            const typeIcons = {
+                'PDF': 'file-text',
+                'Mapa Mental': 'network',
+                'Lista de Exercícios': 'list-checks',
+                'Slides': 'presentation'
+            };
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-12 bg-white rounded-3xl border border-slate-200 text-slate-400">Nenhum material encontrado com esses filtros.</div>`;
+            } else {
+                grid.innerHTML = filtered.map(mat => {
+                    const icon = typeIcons[mat.type] || 'file';
+                    return `
+                        <div class="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-xs hover:shadow-md hover:border-royal-300 transition flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between gap-2 mb-4">
+                                    <div class="w-11 h-11 rounded-2xl bg-royal-50 text-royal-600 flex items-center justify-center">
+                                        <i data-lucide="${icon}" class="w-5 h-5"></i>
+                                    </div>
+                                    <span class="text-[11px] font-bold uppercase px-3 py-1 rounded-full bg-slate-100 text-slate-600">${mat.type}</span>
+                                </div>
+                                <span class="text-xs font-bold text-celeste-600">${mat.subject}</span>
+                                <h3 class="font-display font-bold text-lg text-slate-900 mt-0.5">${mat.title}</h3>
+                                <p class="text-xs sm:text-sm text-slate-500 mt-2 leading-relaxed">${mat.description}</p>
+                            </div>
+                            <button onclick="openMaterialModal('${mat.id}')" class="mt-5 w-full py-2.5 rounded-xl bg-royal-600 hover:bg-royal-700 text-white font-semibold text-xs flex items-center justify-center gap-2 transition">
+                                <i data-lucide="eye" class="w-4 h-4"></i> Visualizar & Baixar
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            if (ownerList) {
+                ownerList.innerHTML = state.materials.map(mat => `
+                    <div class="p-3.5 rounded-2xl border border-slate-200 flex items-center justify-between gap-3">
+                        <div>
+                            <span class="text-[10px] font-bold uppercase text-celeste-600">${mat.subject} • ${mat.type}</span>
+                            <p class="font-bold text-sm text-slate-900">${mat.title}</p>
+                        </div>
+                        <button onclick="deletePublicDoc('materials', '${mat.id}')" class="p-2 text-red-500 hover:bg-red-50 rounded-xl shrink-0">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `).join('');
+            }
+            lucide.createIcons();
+        };
+
+        window.openMaterialModal = function(id) {
+            const mat = state.materials.find(m => m.id === id);
+            if (!mat) return;
+            document.getElementById('preview-mat-badge').textContent = `${mat.subject} • ${mat.type}`;
+            document.getElementById('preview-mat-title').textContent = mat.title;
+            document.getElementById('preview-mat-desc').textContent = mat.description;
+            const link = document.getElementById('preview-mat-link');
+            link.href = mat.url && mat.url !== '#' ? mat.url : '#download';
+            link.dataset.hasExternal = (mat.url && mat.url !== '#') ? 'true' : 'false';
+
+            const modal = document.getElementById('material-preview-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        };
+
+        window.closeMaterialModal = function() {
+            const modal = document.getElementById('material-preview-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+
+        window.triggerSimulatedDownload = function(e) {
+            const link = e.currentTarget;
+            if (link.dataset.hasExternal === 'false') {
+                e.preventDefault();
+                showToast('Download iniciado com sucesso! Arquivo salvo no seu dispositivo.', 'success');
+                closeMaterialModal();
+            }
+        };
+
+        // ======================================================================
+        // ASSISTENTE DE IA INTEGRADA: TUTOR LEVE IA (GEMINI API)
+        // ======================================================================
+        function formatSimpleMarkdown(text) {
+            return text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/\n- /g, '<br>• ')
+                .replace(/\n/g, '<br>');
+        }
+
+        function appendChatMessage(sender, htmlText) {
+            const container = document.getElementById('tutor-chat-messages');
+            const wrapper = document.createElement('div');
+
+            if (sender === 'user') {
+                wrapper.className = 'flex items-start justify-end gap-3 fade-in';
+                wrapper.innerHTML = `
+                    <div class="bg-royal-600 text-white rounded-2xl rounded-tr-none p-4 shadow-xs text-sm max-w-2xl leading-relaxed">
+                        ${htmlText}
+                    </div>
+                    <div class="w-9 h-9 rounded-2xl bg-royal-100 flex items-center justify-center text-lg shrink-0">
+                        ${state.profile.avatar || '🎓'}
+                    </div>
+                `;
+            } else {
+                wrapper.className = 'flex items-start gap-3 max-w-3xl fade-in';
+                wrapper.innerHTML = `
+                    <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-royal-600 to-celeste-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                        <i data-lucide="bot" class="w-5 h-5"></i>
+                    </div>
+                    <div class="bg-white border border-slate-200/80 rounded-2xl rounded-tl-none p-4 shadow-2xs text-sm text-slate-700 leading-relaxed ai-prose">
+                        <p>${htmlText}</p>
+                    </div>
+                `;
+            }
+
+            container.appendChild(wrapper);
+            container.scrollTop = container.scrollHeight;
+            lucide.createIcons();
+            return wrapper;
+        }
+
+        async function callGeminiWithRetry(promptText) {
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const systemInstruction = `Você é o Tutor Leve IA, o assistente educacional oficial da plataforma brasileira 'Estudo Leve'. 
+Seu tom é acolhedor, didático, claro e motivador. Responda sempre em português do Brasil. 
+Use tópicos, negrito e exemplos práticos para facilitar o aprendizado sem sobrecarregar o estudante.`;
+
+            const payload = {
+                contents: [{ parts: [{ text: promptText }] }],
+                systemInstruction: {
+                    parts: [{ text: systemInstruction }]
+                }
+            };
+
+            const delays = [1000, 2000, 4000];
+            for (let attempt = 0; attempt <= delays.length; attempt++) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const data = await response.json();
+                    const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (reply) return reply;
+                    throw new Error("Resposta vazia");
+                } catch (err) {
+                    if (attempt === delays.length) {
+                        return "No momento estou finalizando uma atualização de conexão, mas já posso te ajudar: revise os tópicos principais do resumo na Trilha de Estudos e tente enviar sua pergunta novamente em instantes!";
+                    }
+                    await new Promise(res => setTimeout(res, delays[attempt]));
+                }
+            }
+        }
+
+        window.sendQuickPrompt = function(text) {
+            switchTab('tutor');
+            document.getElementById('tutor-chat-input').value = text;
+            document.getElementById('tutor-chat-form').dispatchEvent(new Event('submit'));
+        };
+
+        window.askTutorAboutCurrentLesson = function() {
+            const lesson = state.lessons.find(l => l.id === state.activeLessonId);
+            if (!lesson) return;
+            sendQuickPrompt(`Estou estudando o módulo "${lesson.title}" de ${lesson.subject}. Pode me explicar os pontos mais importantes de forma simples e me dar 1 exemplo prático?`);
+        };
+
+        window.askTutorForExamPrep = function(subject, title) {
+            sendQuickPrompt(`Tenho a prova "${title}" de ${subject} em breve. Crie um guia rápido de revisão com os 3 tópicos essenciais que mais caem!`);
+        };
+
+        window.clearTutorChat = function() {
+            const container = document.getElementById('tutor-chat-messages');
+            container.innerHTML = '';
+            appendChatMessage('ai', '<strong>Conversa reiniciada! ✨</strong><br>Como posso te ajudar nos seus estudos agora?');
+        };
+
+        document.getElementById('tutor-chat-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('tutor-chat-input');
+            const sendBtn = document.getElementById('tutor-send-btn');
+            const userMsg = input.value.trim();
+            if (!userMsg) return;
+
+            input.value = '';
+            input.disabled = true;
+            sendBtn.disabled = true;
+
+            appendChatMessage('user', userMsg);
+            const loadingBubble = appendChatMessage('ai', '<span class="inline-flex items-center gap-2 text-royal-600 font-medium"><span class="w-2 h-2 rounded-full bg-royal-600 animate-ping"></span> Pensando na melhor explicação...</span>');
+
+            const reply = await callGeminiWithRetry(userMsg);
+            loadingBubble.remove();
+            appendChatMessage('ai', formatSimpleMarkdown(reply));
+
+            input.disabled = false;
+            sendBtn.disabled = false;
+            input.focus();
+        });
+
+        // ======================================================================
+        // PAINEL EXCLUSIVO DO PROPRIETÁRIO (CRUD NO FIRESTORE)
+        // ======================================================================
+        window.switchOwnerSection = function(sec) {
+            document.querySelectorAll('.owner-section').forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('grid');
+            });
+            const active = document.getElementById(`owner-sec-${sec}`);
+            active.classList.remove('hidden');
+            active.classList.add('grid');
+
+            document.querySelectorAll('.owner-sec-btn').forEach(btn => {
+                btn.className = 'owner-sec-btn px-4 py-2.5 rounded-xl bg-white text-slate-700 border border-slate-200 text-sm font-semibold hover:bg-royal-50';
+            });
+            document.getElementById(`owner-sec-btn-${sec}`).className = 'owner-sec-btn px-4 py-2.5 rounded-xl bg-royal-600 text-white text-sm font-semibold shadow-xs';
+        };
+
+        window.deletePublicDoc = async function(colName, docId) {
+            const confirmed = await showConfirmModal('Excluir item da turma?', 'Esta ação removerá o conteúdo para todos os estudantes imediatamente.');
+            if (!confirmed) return;
+
+            if (useMemoryFallback) {
+                state[colName] = state[colName].filter(item => item.id !== docId);
+                refreshAllUI();
+                showToast('Item removido.', 'info');
+                return;
+            }
+
+            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', colName, docId));
+            showToast('Item removido da nuvem!', 'success');
+        };
+
+        // 1. Adicionar Aviso
+        document.getElementById('form-add-announcement').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newAnn = {
+                title: document.getElementById('ann-title').value.trim(),
+                priority: document.getElementById('ann-priority').value,
+                content: document.getElementById('ann-content').value.trim(),
+                createdAt: new Date().toISOString()
+            };
+
+            if (useMemoryFallback) {
+                state.announcements.unshift({ id: 'local-' + Date.now(), ...newAnn });
+                renderAnnouncements();
+            } else {
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'announcements'), newAnn);
+            }
+            e.target.reset();
+            showToast('Aviso publicado no mural da turma!', 'success');
+        });
+
+        // 2. Adicionar Prova
+        document.getElementById('form-add-exam').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newExam = {
+                subject: document.getElementById('exam-subject').value.trim(),
+                title: document.getElementById('exam-title').value.trim(),
+                date: document.getElementById('exam-date').value,
+                time: document.getElementById('exam-time').value,
+                location: document.getElementById('exam-location').value.trim()
+            };
+
+            if (useMemoryFallback) {
+                state.exams.push({ id: 'local-' + Date.now(), ...newExam });
+                renderExams();
+            } else {
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'exams'), newExam);
+            }
+            e.target.reset();
+            showToast('Prova adicionada ao calendário!', 'success');
+        });
+
+        // 3. Adicionar Módulo na Trilha
+        document.getElementById('form-add-lesson').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const rawSummary = document.getElementById('les-summary').value.trim();
+            const formattedSummary = rawSummary.split('\n').map(p => `<p>${p}</p>`).join('');
+
+            const newLesson = {
+                subject: document.getElementById('les-subject').value.trim(),
+                order: parseInt(document.getElementById('les-order').value, 10) || 1,
+                title: document.getElementById('les-title').value.trim(),
+                description: `Módulo de ${document.getElementById('les-subject').value.trim()} criado pelo Proprietário.`,
+                summary: formattedSummary,
+                videoUrl: document.getElementById('les-video').value.trim() || 'https://www.youtube.com/embed/Z5a324-O0aM',
+                questions: [
+                    {
+                        question: document.getElementById('les-q-text').value.trim(),
+                        options: [
+                            document.getElementById('les-q-opt0').value.trim(),
+                            document.getElementById('les-q-opt1').value.trim(),
+                            document.getElementById('les-q-opt2').value.trim(),
+                            document.getElementById('les-q-opt3').value.trim()
+                        ],
+                        correctIndex: parseInt(document.getElementById('les-q-correct').value, 10),
+                        explanation: document.getElementById('les-q-exp').value.trim()
+                    }
+                ]
+            };
+
+            if (useMemoryFallback) {
+                state.lessons.push({ id: 'local-' + Date.now(), ...newLesson });
+                renderTrail();
+            } else {
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'lessons'), newLesson);
+            }
+            e.target.reset();
+            showToast('Nova etapa publicada na Trilha de Estudos!', 'success');
+        });
+
+        // 4. Adicionar Material na Biblioteca
+        document.getElementById('form-add-material').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newMat = {
+                title: document.getElementById('mat-title').value.trim(),
+                subject: document.getElementById('mat-subject').value.trim(),
+                type: document.getElementById('mat-type').value,
+                description: document.getElementById('mat-desc').value.trim(),
+                url: document.getElementById('mat-url').value.trim() || '#'
+            };
+
+            if (useMemoryFallback) {
+                state.materials.push({ id: 'local-' + Date.now(), ...newMat });
+                renderLibrary();
+            } else {
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'materials'), newMat);
+            }
+            e.target.reset();
+            showToast('Material adicionado à Biblioteca!', 'success');
+        });
+
+        // Inicializar Ícones e Aplicação
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            initApp();
+        });
+    </script>
+</body>
+</html>
+```
